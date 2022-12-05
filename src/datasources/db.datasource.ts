@@ -5,11 +5,11 @@ const config = {
   name: 'db',
   connector: 'mysql',
   url: '',
-  host: 'minec.serveminecraft.net',
-  port: 41557,
-  user: 'root',
-  password: 'bshfSFAfb6@df',
-  database: 'auth'
+  host: process.env.HOST,
+  port: process.env.PORT,
+  user: process.env.USER,
+  password: process.env.PASS,
+  database: process.env.DATABASE
 };
 
 // Observe application's life cycle to disconnect the datasource when
