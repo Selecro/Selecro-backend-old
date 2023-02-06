@@ -1,34 +1,24 @@
-import {authenticate, AuthenticationBindings} from '@loopback/authentication';
+import {authenticate, AuthenticationBindings, TokenService} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {get, getJsonSchemaRef, post, requestBody} from '@loopback/rest';
-import {UserProfile} from '@loopback/security';
-import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {TokenServiceBindings, UserServiceBindings} from '../keys';
 import {User} from '../models';
 import {Credentials, UserRepository} from '../repositories';
-import {BcryptHasher} from '../services/hash.password';
-import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 
-
 export class UserController {
+  hasher: any;
   constructor(
-    @repository(UserRepository)
-    public userRepository: UserRepository,
-
-    // @inject('service.hasher')
-    @inject(PasswordHasherBindings.PASSWORD_HASHER)
-    public hasher: BcryptHasher,
-
-    // @inject('service.user.service')
+    @inject(TokenServiceBindings.TOKEN_SERVICE)
+    public jwtService: TokenService,
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: MyUserService,
-
-    // @inject('service.jwt.service')
-    @inject(TokenServiceBindings.TOKEN_SERVICE)
-    public jwtService: JWTService,
-
+    @inject(SecurityBindings.USER, {optional: true})
+    public user: UserProfile,
+    @repository(UserRepository) protected userRepository: UserRepository,
   ) { }
 
   @post('/signup', {

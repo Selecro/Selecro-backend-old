@@ -10,6 +10,10 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 
+import {AuthenticationComponent} from '@loopback/authentication';
+import {JWTAuthenticationComponent, UserServiceBindings} from '@loopback/authentication-jwt';
+import {DbDataSource} from './datasources';
+
 export {ApplicationConfig};
 
 export class FirstappApplication extends BootMixin(
@@ -40,5 +44,11 @@ export class FirstappApplication extends BootMixin(
         nested: true,
       },
     };
+
+    this.component(AuthenticationComponent);
+    // Mount jwt component
+    this.component(JWTAuthenticationComponent);
+    // Bind datasource
+    this.dataSource(DbDataSource, UserServiceBindings.DATASOURCE_NAME);
   }
 }
