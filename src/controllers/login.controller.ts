@@ -45,7 +45,7 @@ export class UserController {
     //validateCredentials(_.pick(userData, ['email', 'password']));
     userData.passwdhash = await this.hasher.hashPassword(userData.passwdhash)
     const savedUser = await this.userRepository.create(userData);
-    //delete savedUser.password;
+    //delete savedUser.passwdhash;
     return savedUser;
   }
 
