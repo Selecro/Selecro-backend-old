@@ -57,6 +57,7 @@
     "@loopback/rest-explorer": "^5.0.5",
     "@loopback/service-proxy": "^5.0.5",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
     "isemail": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "loopback-connector-mysql": "^6.1.0",
