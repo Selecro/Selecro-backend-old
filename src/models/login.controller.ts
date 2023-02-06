@@ -42,7 +42,7 @@ export class UserController {
     }
   })
   async signup(@requestBody() userData: User) {
-    //validateCredentials(_.pick(userData, ['email', 'password']));
+    //validateCredentials(_.pick(userData, ['email', 'passwordhash']));
     userData.passwdhash = await this.hasher.hashPassword(userData.passwdhash)
     const savedUser = await this.userRepository.create(userData);
     //delete savedUser.password;

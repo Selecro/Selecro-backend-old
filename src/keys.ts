@@ -5,7 +5,7 @@ import {Credentials} from './repositories/user.repository';
 import {PasswordHasher} from './services/hash.password';
 
 export namespace TokenServiceConstants {
-  export const TOKEN_SECRET_VALUE = '138asda8213';
+  export const TOKEN_SECRET_VALUE = 'up9f3dpq98';
   export const TOKEN_EXPIRES_IN_VALUE = '7h';
 }
 export namespace TokenServiceBindings {

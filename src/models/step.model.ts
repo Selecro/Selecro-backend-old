@@ -1,69 +1,51 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model()
-export class User extends Entity {
+export class Step extends Entity {
   @property({
     type: 'number',
     id: true,
     generated: true,
   })
-  id: number;
+  id?: number;
 
   @property({
     type: 'string',
     required: true,
   })
-  email: string;
-
-  @property({
-    type: 'string',
-    required: false,
-  })
-  name?: string;
-
-  @property({
-    type: 'string',
-    required: false,
-  })
-  surname?: string;
-
-  @property({
-    type: 'string',
-    required: false,
-  })
-  username?: string;
+  style: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  passwdsalt: string;
+  title: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  passwdhash: string;
+  pomucky: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  nick: string;
+  popis: string;
 
   @property({
     type: 'number',
     required: true,
   })
-  group_idgroup: number;
+  navod_idnavod: number;
 
-  constructor(data?: Partial<User>) {
+  constructor(data?: Partial<Step>) {
     super(data);
   }
 }
 
-export interface UserRelations {
+export interface StepRelations {
   // describe navigational properties here
 }
 
-export type UserWithRelations = User & UserRelations;
+export type StepWithRelations = Step & StepRelations;
