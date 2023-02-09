@@ -6,13 +6,12 @@ dotenv.config();
 
 const config = {
   name: 'db',
-  connector: 'mysql',
+  connector: 'mssql',
   host: process.env.HOST,
-  port: process.env.PORT,
+  port: Number(process.env.PORT),
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
-  ssl: true,
 };
 
 // Observe application's life cycle to disconnect the datasource when
