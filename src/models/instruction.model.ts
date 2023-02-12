@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany, belongsTo} from '@loopback/repository';
+import {Step} from './step.model';
+import {User} from './user.model';
 
 enum Type {
   lehky = 'lehky',
@@ -28,10 +30,21 @@ export class Instruction extends Entity {
   type: Type;
 
   @property({
+    type: 'string',
+    required: true,
+  })
+  link: string;
+
+  @property({
     type: 'number',
     required: true,
   })
   user_id: number;
+  @hasMany(() => Step)
+  steps: Step[];
+
+  @belongsTo(() => User)
+  userId: number;
 
   constructor(data?: Partial<Instruction>) {
     super(data);
