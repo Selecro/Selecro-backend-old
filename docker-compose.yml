@@ -1,0 +1,30 @@
+version: '3'
+services:
+  postgres-selecro:
+    image: postgres
+    container_name: postgres-selecro
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: postgres
+      POSTGRES_DB: selecro
+    ports:
+      - 5433:5432
+    networks:
+      - selecro
+  adminer-selecro:
+    image: adminer:latest
+    container_name: adminer-selecro
+    environment:
+        ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - 8082:8080
+    depends_on:
+      - postgres-selecro
+    networks:
+      - selecro
+
+networks:
+  selecro:
+    driver: bridge
+
