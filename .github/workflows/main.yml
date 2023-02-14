@@ -16,6 +16,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
       - name: connect and pull
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p {{ secrets.SSH_PORT }}"cd ${{ secrets.WORK_DIR }} && git checkout main && git pull && docker build -t selecro-main . && docker run -dp 3000:3000 selecro-main && exit"
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p {{ secrets.SSH_PORT }}"cd ${{ secrets.WORK_DIR }} && git checkout main && git pull && docker build -t backend-main . && docker run -dp 3000:3000 backend-main && exit"
       - name: cleanup
         run: rm -rf ~/.ssh
