@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany, belongsTo} from '@loopback/repository';
+import {Instruction} from './instruction.model';
+import {Group} from './group.model';
 
 @model()
 export class User extends Entity {
@@ -7,7 +9,7 @@ export class User extends Entity {
     id: true,
     generated: true,
   })
-  id?: number;
+  id: number;
 
   @property({
     type: 'string',
@@ -17,23 +19,50 @@ export class User extends Entity {
 
   @property({
     type: 'string',
-    required: true,
+    required: false,
   })
-  password: string;
+  name?: string;
+
+  @property({
+    type: 'string',
+    required: false,
+  })
+  surname?: string;
+
+  @property({
+    type: 'string',
+    required: false,
+  })
+  username?: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  firstName: string;
+  passwdsalt: string;
 
   @property({
     type: 'string',
     required: true,
   })
-  lastName: string;
-  username: string | undefined;
+  passwdhash: string;
 
+  @property({
+    type: 'string',
+    required: true,
+  })
+  nick: string;
+
+  @property({
+    type: 'number',
+    required: true,
+  })
+  group_idgroup: number;
+  @hasMany(() => Instruction)
+  instructions: Instruction[];
+
+  @belongsTo(() => Group)
+  groupId: number;
 
   constructor(data?: Partial<User>) {
     super(data);

@@ -5,14 +5,19 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const config = {
+  name: 'db',
+  connector: 'mssql',
   host: process.env.HOST,
-  port: process.env.PORT,
+  port: Number(process.env.PORT),
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
-  ssl: true,
 };
 
+// Observe application's life cycle to disconnect the datasource when
+// application is stopped. This allows the application to be shut down
+// gracefully. The `stop()` method is inherited from `juggler.DataSource`.
+// Learn more at https://loopback.io/doc/en/lb4/Life-cycle.html
 @lifeCycleObserver('datasource')
 export class DbDataSource extends juggler.DataSource
   implements LifeCycleObserver {
