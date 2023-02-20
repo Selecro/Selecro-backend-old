@@ -4,8 +4,11 @@ import {User} from './models';
 import {Credentials} from './repositories/user.repository';
 import {PasswordHasher} from './services/hash.password';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export namespace TokenServiceConstants {
-  export const TOKEN_SECRET_VALUE = '138asda8213';
+  export const TOKEN_SECRET_VALUE = process.env.TOKEN;
   export const TOKEN_EXPIRES_IN_VALUE = '7h';
 }
 export namespace TokenServiceBindings {

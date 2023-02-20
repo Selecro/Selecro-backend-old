@@ -1,5 +1,8 @@
 import {ApplicationConfig, FirstappApplication} from './application';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
@@ -18,7 +21,7 @@ if (require.main === module) {
   // Run the application
   const config = {
     rest: {
-      port: +(process.env.PORT ?? 3000),
+      port: Number(process.env.EXTPORT),
       host: process.env.HOST,
       // The `gracePeriodForClose` provides a graceful close for http/https
       // servers with keep-alive clients. The default value is `Infinity`
