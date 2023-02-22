@@ -8,50 +8,51 @@ const signAsync = promisify(jwt.sign);
 const verifyAsync = promisify(jwt.verify);
 
 export class JWTService {
-  // @inject('authentication.jwt.secret')
   @inject(TokenServiceBindings.TOKEN_SECRET)
   public readonly jwtSecret: string;
-
   @inject(TokenServiceBindings.TOKEN_EXPIRES_IN)
-  public readonly expiresSecret: string;
+  public readonly jwtExpiresIn: string;
 
   async generateToken(userProfile: UserProfile): Promise<string> {
     if (!userProfile) {
       throw new HttpErrors.Unauthorized(
-        'Error while generating token :userProfile is null'
-      )
+        'Error while generating token : userprofile is null',
+      );
     }
     let token = '';
     try {
       token = await signAsync(userProfile, this.jwtSecret, {
-        expiresIn: this.expiresSecret
+        expiresIn: this.jwtExpiresIn,
       });
-      return token;
     } catch (err) {
-      throw new HttpErrors.Unauthorized(
-        `error generating token ${err}`
-      )
+      throw new HttpErrors.Unauthorized(`error generating token ${err}`);
     }
+    return token;
   }
-
   async verifyToken(token: string): Promise<UserProfile> {
-
     if (!token) {
       throw new HttpErrors.Unauthorized(
-        `Error verifying token:'token' is null`
-      )
-    };
-
-    let userProfile: UserProfile;
-    try {
-      const decryptedToken = await verifyAsync(token, this.jwtSecret);
-      userProfile = Object.assign(
-        {[securityId]: '', id: '', name: ''},
-        {[securityId]: decryptedToken.id, id: decryptedToken.id, name: decryptedToken.name}
+        `Error verifying token : 'token' is null`,
       );
     }
-    catch (err) {
-      throw new HttpErrors.Unauthorized(`Error verifying token:${err.message}`)
+    let userProfile: UserProfile;
+    try {
+      // decode user profile from token
+      const decryptedToken = await verifyAsync(token, this.jwtSecret);
+      // don't copy over  token field 'iat' and 'exp', nor 'email' to user profile
+      userProfile = Object.assign(
+        {[securityId]: '', name: '', permissions: []},
+        {
+          id: decryptedToken.id,
+          name: decryptedToken.name,
+          permissions: decryptedToken.permissions,
+          email: decryptedToken.email
+        },
+      );
+    } catch (error) {
+      throw new HttpErrors.Unauthorized(
+        `Error verifying token : ${error.message}`,
+      );
     }
     return userProfile;
   }
