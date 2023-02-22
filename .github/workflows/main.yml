@@ -30,6 +30,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
       - name: connect and pull
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p {{ secrets.SSH_PORT }}"cd ${{ secrets.WORK_DIR }}-${{ env.DEPLOY_DIR }} && git checkout main && git pull && docker build -t backend-${{ env.DEPLOY_DIR }} . && docker kill backend-${{ env.DEPLOY_DIR }} && docker run -dp ${{ env.PORT }}:${{ env.PORT }} backend-${{ env.DEPLOY_DIR }} && exit"
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -p {{ secrets.SSH_PORT }}"cd ${{ secrets.WORK_DIR }}-${{ env.DEPLOY_DIR }} && git checkout ${{ env.DEPLOY_DIR }} && git pull && docker build -t backend-${{ env.DEPLOY_DIR }} . && docker kill backend-${{ env.DEPLOY_DIR }} && docker rm backend-${{ env.DEPLOY_DIR }} && docker run --name backend-${{ env.DEPLOY_DIR }} -dp ${{ env.PORT }}:${{ env.PORT }} backend-${{ env.DEPLOY_DIR }} && exit"
       - name: cleanup
         run: rm -rf ~/.ssh
