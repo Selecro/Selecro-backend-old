@@ -8,7 +8,7 @@ const config = {
   name: 'db',
   connector: 'postgresql',
   host: process.env.SQLHOST,
-  port: Number(process.env.PORT),
+  port: Number(process.env.SQLPORT),
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
