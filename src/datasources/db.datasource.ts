@@ -6,9 +6,9 @@ dotenv.config();
 
 const config = {
   name: 'db',
-  connector: 'mssql',
-  host: process.env.HOST,
-  port: Number(process.env.PORT),
+  connector: 'postgresql',
+  host: process.env.SQLHOST,
+  port: Number(process.env.SQLPORT),
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
