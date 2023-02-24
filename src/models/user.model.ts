@@ -1,6 +1,6 @@
-import {Entity, model, property, hasMany, belongsTo} from '@loopback/repository';
-import {Instruction} from './instruction.model';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Group} from './group.model';
+import {Instruction} from './instruction.model';
 
 @model()
 export class User extends Entity {
@@ -39,25 +39,7 @@ export class User extends Entity {
     type: 'string',
     required: true,
   })
-  passwdsalt: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  passwdhash: string;
-
-  @property({
-    type: 'string',
-    required: true,
-  })
-  nick: string;
-
-  @property({
-    type: 'number',
-    required: true,
-  })
-  group_idgroup: number;
+  passwdhash: string = "mfjenvn22";
   @hasMany(() => Instruction)
   instructions: Instruction[];
 
