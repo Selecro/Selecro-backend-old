@@ -28,8 +28,8 @@ export class MyUserService implements UserService<User, Credentials> {
     }
 
     const passwordMatched = await this.hasher.comparePassword(
-      credentials.passwdhash,
-      foundUser.passwdhash,
+      credentials.password,
+      foundUser.password,
     );
     if (!passwordMatched) {
       throw new HttpErrors.Unauthorized('password is not valid');

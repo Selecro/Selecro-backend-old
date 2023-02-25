@@ -3,10 +3,8 @@ import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
 import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import * as _ from 'lodash';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Credentials, UserRepository} from '../repositories';
-import {validateCredentials} from '../services';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
@@ -113,9 +111,8 @@ export class UserController {
       },
     })
     userData: UserSingup) {
-    validateCredentials(_.pick(userData, ['email', 'passwdhash']));
     userData.passwdhash = await this.hasher.hashPassword(userData.passwdhash);
-    const savedUser = await this.userRepository.create(_.omit(userData, 'passwdhash'));
+    const savedUser = await this.userRepository.create(userData);
     //delete savedUser.passwdhash;
     return savedUser;
   }

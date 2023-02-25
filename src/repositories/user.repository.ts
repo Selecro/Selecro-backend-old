@@ -5,7 +5,7 @@ import {User, UserRelations} from '../models';
 
 export type Credentials = {
   email: string;
-  passwdhash: string;
+  password: string;
 }
 
 export class UserRepository extends DefaultCrudRepository<
