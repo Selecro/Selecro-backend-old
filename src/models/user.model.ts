@@ -1,17 +1,19 @@
-import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Group} from './group.model';
 import {Instruction} from './instruction.model';
+import {UserInstruction} from './user-instruction.model';
 
-@model()
+@model({
+  name: 'users',
+})
 export class User extends Entity {
   @property({
     type: 'number',
     required: true,
     scale: 0,
     id: 1,
-    generated: true,
     postgresql: {
-      columnName: 'iduser',
+      columnName: 'user_id',
       dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
@@ -23,6 +25,7 @@ export class User extends Entity {
 
   @property({
     type: 'string',
+    required: true,
     postgresql: {
       columnName: 'email',
       dataType: 'text',
@@ -36,47 +39,9 @@ export class User extends Entity {
 
   @property({
     type: 'string',
-    postgresql: {
-      columnName: 'name',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'YES',
-    },
-  })
-  name?: string;
-
-  @property({
-    type: 'string',
-    postgresql: {
-      columnName: 'surname',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'YES',
-    },
-  })
-  surname?: string;
-
-  @property({
-    type: 'string',
+    required: true,
     postgresql: {
       columnName: 'username',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'YES',
-    },
-  })
-  username?: string;
-
-  @property({
-    type: 'string',
-    postgresql: {
-      columnName: 'passwdsalt',
       dataType: 'text',
       dataLength: null,
       dataPrecision: null,
@@ -84,10 +49,11 @@ export class User extends Entity {
       nullable: 'NO',
     },
   })
-  salt: string;
+  username: string;
 
   @property({
     type: 'string',
+    required: true,
     postgresql: {
       columnName: 'passdwhash',
       dataType: 'text',
@@ -101,8 +67,9 @@ export class User extends Entity {
 
   @property({
     type: 'string',
+    required: true,
     postgresql: {
-      columnName: 'nick',
+      columnName: 'passwdsalt',
       dataType: 'text',
       dataLength: null,
       dataPrecision: null,
@@ -110,27 +77,55 @@ export class User extends Entity {
       nullable: 'NO',
     },
   })
-  nick: string;
+  salt: string;
 
   @property({
-    type: 'number',
-    required: true,
-    generated: true,
+    type: 'string',
+    required: false,
     postgresql: {
-      columnName: 'idgroup',
-      dataType: 'integer',
+      columnName: 'name',
+      dataType: 'text',
       dataLength: null,
       dataPrecision: null,
-      dataScale: 0,
-      nullable: 'NO',
+      dataScale: null,
+      nullable: 'YES',
     },
   })
-  idgroup: number;
+  name?: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    postgresql: {
+      columnName: 'surname',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'YES',
+    },
+  })
+  surname?: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    postgresql: {
+      columnName: 'nick',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'YES',
+    },
+  })
+  nick?: string;
+
   @hasMany(() => Instruction)
   instructions: Instruction[];
 
-  @belongsTo(() => Group)
-  groupId: number;
+  @hasMany(() => Group, {through: {model: () => UserInstruction}})
+  groups: Group[];
 
   constructor(data?: Partial<User>) {
     super(data);
