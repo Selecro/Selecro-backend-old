@@ -1,5 +1,5 @@
 // import {SECURITY_SCHEME_SPEC} from './utils/security-spec';
-import {SECURITY_SCHEME_SPEC} from '@loopback/authentication-jwt';
+import {SECURITY_SCHEME_SPEC, UserRepository} from '@loopback/authentication-jwt';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
@@ -9,6 +9,7 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 //import {JWTStrategy} from './authentication-stratgies/jwt-stratgies';
 import {PasswordHasherBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings} from './keys';
+import {GroupRepository, InstructionRepository, StepRepository, UserGroupRepository} from './repositories';
 import {MySequence} from './sequence';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
@@ -41,6 +42,11 @@ export class FirstappApplication extends BootMixin(
       path: '/explorer',
     });
     this.component(RestExplorerComponent);
+    this.repository(UserRepository);
+    this.repository(InstructionRepository);
+    this.repository(StepRepository);
+    this.repository(UserGroupRepository);
+    this.repository(GroupRepository);
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here

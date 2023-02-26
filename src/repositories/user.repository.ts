@@ -1,4 +1,4 @@
-import {Getter, inject} from '@loopback/core';
+import {Getter, inject, injectable} from '@loopback/core';
 import {DefaultCrudRepository, HasManyThroughRepositoryFactory, repository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {Group, User, UserGroup, UserRelations} from '../models';
@@ -7,9 +7,10 @@ import {UserGroupRepository} from './user-group.repository';
 
 export type Credentials = {
   email: string;
-  password: string;
+  passwordHash: string;
 }
 
+@injectable()
 export class UserRepository extends DefaultCrudRepository<
   User,
   typeof User.prototype.id,
@@ -17,24 +18,24 @@ export class UserRepository extends DefaultCrudRepository<
 > {
 
   public readonly groups: HasManyThroughRepositoryFactory<
-    Group,
-    typeof Group.prototype.id,
-    UserGroup,
-    typeof User.prototype.id
-  >;
+  Group,
+  typeof Group.prototype.id,
+  UserGroup,
+  typeof User.prototype.id
+>;
 
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @repository.getter('GroupRepository')
-    GroupRepositoryGetter: Getter<GroupRepository>,
+    groupRepositoryGetter: Getter<GroupRepository>,
     @repository.getter('UserGroupRepository')
-    UserGroupRepositoryGetterGetter: Getter<UserGroupRepository>,
+    userGroupRepositoryGetter: Getter<UserGroupRepository>,
   ) {
     super(User, dataSource);
     this.groups = this.createHasManyThroughRepositoryFactoryFor(
       'groups',
-      GroupRepositoryGetter,
-      UserGroupRepositoryGetterGetter,
+      groupRepositoryGetter,
+      userGroupRepositoryGetter,
     );
   }
 }

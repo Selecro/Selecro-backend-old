@@ -13,12 +13,11 @@ enum Type {
 })
 export class Instruction extends Entity {
   @property({
-    type: 'number',
+    id: true,
+    generated: true,
     required: true,
-    scale: 0,
-    id: 1,
     postgresql: {
-      columnName: 'instruction_id',
+      columnName: 'id',
       dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
@@ -70,11 +69,8 @@ export class Instruction extends Entity {
   })
   link: string;
 
-  @hasMany(() => Step)
+  @hasMany(()=>Step, {keyTo: 'instruction_id'})
   steps: Step[];
-
-  @belongsTo(() => User)
-  user_id: number;
 
   constructor(data?: Partial<Instruction>) {
     super(data);

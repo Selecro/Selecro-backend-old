@@ -10,12 +10,12 @@ enum Role {
 })
 export class Group extends Entity {
   @property({
+    id: true,
+    generated: true,
     type: 'number',
     required: true,
-    scale: 0,
-    id: 1,
     postgresql: {
-      columnName: 'group_id',
+      columnName: 'id',
       dataType: 'integer',
       dataLength: null,
       dataPrecision: null,

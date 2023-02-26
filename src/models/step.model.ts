@@ -6,12 +6,11 @@ import {Instruction} from './instruction.model';
 })
 export class Step extends Entity {
   @property({
-    type: 'number',
+    id: true,
+    generaetd: true,
     required: true,
-    scale: 0,
-    id: 1,
     postgresql: {
-      columnName: 'step_id',
+      columnName: 'id',
       dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
@@ -20,6 +19,9 @@ export class Step extends Entity {
     },
   })
   id: number;
+
+  @belongsTo(() => Instruction)
+  instruction_id: number;
 
   @property({
     type: 'string',
@@ -76,9 +78,6 @@ export class Step extends Entity {
     },
   })
   popis: string;
-
-  @belongsTo(() => Instruction)
-  instruction_id: number;
 
   constructor(data?: Partial<Step>) {
     super(data);

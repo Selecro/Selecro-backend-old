@@ -8,15 +8,12 @@ import {UserGroup} from './user-group.model';
 })
 export class User extends Entity {
   @property({
-    type: 'number',
-    required: true,
-    scale: 0,
-    id: 1,
+    id: true,
+    generated: true,
     postgresql: {
-      columnName: 'user_id',
-      dataType: 'integer',
+      columnName: 'id',
       dataLength: null,
-      dataPrecision: null,
+      dataPrecision: 10,
       dataScale: 0,
       nullable: 'NO',
     },
@@ -55,7 +52,7 @@ export class User extends Entity {
     type: 'string',
     required: true,
     postgresql: {
-      columnName: 'passdwhash',
+      columnName: 'password_hash',
       dataType: 'text',
       dataLength: null,
       dataPrecision: null,
@@ -63,21 +60,7 @@ export class User extends Entity {
       nullable: 'NO',
     },
   })
-  password: string;
-
-  @property({
-    type: 'string',
-    required: true,
-    postgresql: {
-      columnName: 'passwdsalt',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'NO',
-    },
-  })
-  salt: string;
+  passwordHash: string;
 
   @property({
     type: 'string',
@@ -121,16 +104,9 @@ export class User extends Entity {
   })
   nick?: string;
 
-  @hasMany(() => Instruction)
-  instructions: Instruction[];
-
-  @hasMany(() => Group, {
-    through: {
-      model: () => UserGroup,
-      keyFrom: 'user_id',
-      keyTo: 'group_id',
-    },
-  })
+  @hasMany(() => Group, {through: {model: () => UserGroup,
+     keyTo: 'group_id',
+     keyFrom: 'user_id'}})
   groups: Group[];
 
   constructor(data?: Partial<User>) {

@@ -5,10 +5,9 @@ import {Entity, model, property} from '@loopback/repository';
 })
 export class UserGroup extends Entity {
   @property({
-    type: 'number',
+    id: true,
+    generated: true,
     required: true,
-    scale: 0,
-    id: 1,
     postgresql: {
       columnName: 'id',
       dataType: 'integer',
@@ -32,7 +31,7 @@ export class UserGroup extends Entity {
       nullable: 'YES',
     },
   })
-  group_id: number;
+  group_id?: number;
 
   @property({
     type: 'number',
@@ -46,7 +45,7 @@ export class UserGroup extends Entity {
       nullable: 'YES',
     },
   })
-  user_id: number;
+  user_id?: number;
 
   constructor(data?: Partial<UserGroup>) {
     super(data);

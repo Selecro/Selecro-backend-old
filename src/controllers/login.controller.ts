@@ -4,12 +4,13 @@ import {model, property, repository} from '@loopback/repository';
 import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
+import {User} from '../models';
 import {Credentials, UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
-
+const _ = require("lodash");
 
 @model()
 export class UserSingup {
@@ -22,7 +23,7 @@ export class UserSingup {
     type: 'string',
     required: true,
   })
-  passwdhash: string;
+  password: string;
   @property({
     type: 'string',
     required: true,
@@ -111,8 +112,9 @@ export class UserController {
       },
     })
     userData: UserSingup) {
-    userData.passwdhash = await this.hasher.hashPassword(userData.passwdhash);
-    const savedUser = await this.userRepository.create(userData);
+    const user: User = new User(userData);
+    user.passwordHash = await this.hasher.hashPassword(userData.password);
+    const savedUser = await this.userRepository.create(_.omit(user, 'password'));
     //delete savedUser.passwdhash;
     return savedUser;
   }
