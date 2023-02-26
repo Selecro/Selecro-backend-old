@@ -1,9 +1,25 @@
 import {Entity, model, property} from '@loopback/repository';
 
 @model({
-  name: 'users_instructions',
+  name: 'users_groups',
 })
-export class UserInstruction extends Entity {
+export class UserGroup extends Entity {
+  @property({
+    type: 'number',
+    required: true,
+    scale: 0,
+    id: 1,
+    postgresql: {
+      columnName: 'id',
+      dataType: 'integer',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: 0,
+      nullable: 'NO',
+    },
+  })
+  id: number;
+
   @property({
     type: 'number',
     required: false,
@@ -22,7 +38,7 @@ export class UserInstruction extends Entity {
     type: 'number',
     required: true,
     postgresql: {
-      columnName: 'instruction_id',
+      columnName: 'user_id',
       dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
@@ -30,15 +46,15 @@ export class UserInstruction extends Entity {
       nullable: 'YES',
     },
   })
-  instruction_id: number;
+  user_id: number;
 
-  constructor(data?: Partial<UserInstruction>) {
+  constructor(data?: Partial<UserGroup>) {
     super(data);
   }
 }
 
-export interface UserInstructionRelations {
+export interface UserGroupRelations {
   // describe navigational properties here
 }
 
-export type UserInstructionWithRelations = UserInstruction & UserInstructionRelations;
+export type UserGroupWithRelations = UserGroup & UserGroupRelations;

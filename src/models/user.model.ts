@@ -1,7 +1,7 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Group} from './group.model';
 import {Instruction} from './instruction.model';
-import {UserInstruction} from './user-instruction.model';
+import {UserGroup} from './user-group.model';
 
 @model({
   name: 'users',
@@ -124,7 +124,13 @@ export class User extends Entity {
   @hasMany(() => Instruction)
   instructions: Instruction[];
 
-  @hasMany(() => Group, {through: {model: () => UserInstruction}})
+  @hasMany(() => Group, {
+    through: {
+      model: () => UserGroup,
+      keyFrom: 'user_id',
+      keyTo: 'group_id',
+    },
+  })
   groups: Group[];
 
   constructor(data?: Partial<User>) {
