@@ -8,7 +8,7 @@ const signAsync = promisify(jwt.sign);
 const verifyAsync = promisify(jwt.verify);
 
 export class JWTService {
-  // @inject('authentication.jwt.secret')
+  //@inject('authentication.jwt.secret')
   @inject(TokenServiceBindings.TOKEN_SECRET)
   public readonly jwtSecret: string;
 

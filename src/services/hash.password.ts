@@ -4,22 +4,21 @@ import {PasswordHasherBindings} from '../keys';
 
 export interface PasswordHasher<T = string> {
   hashPassword(password: T): Promise<T>;
-  comparePassword(provdedPass: T, storedPass: T): Promise<boolean>
+  comparePassword(providePass: T, storedPass: T): Promise<boolean>
 }
 
 export class BcryptHasher implements PasswordHasher<string> {
-  async comparePassword(provdedPass: string, storedPass: string): Promise<boolean> {
-    const passwordMatches = await compare(provdedPass, storedPass);
-    return passwordMatches;
+  async comparePassword(
+    providePass: string,
+    storedPass: string
+  ): Promise<boolean> {
+    const passwordMatched = await compare(providePass, storedPass);
+    return passwordMatched;
   }
-
-  // @inject('rounds')
   @inject(PasswordHasherBindings.ROUNDS)
-  public readonly rounds: number
-
-  // round: number = 10;
-  async hashPassword(password: string): Promise<string> {
-    const salt = await genSalt(this.rounds);
+  public readonly round: number;
+  async hashPassword(password: string) {
+    const salt = await genSalt(this.round);
     return await hash(password, salt);
   }
 }

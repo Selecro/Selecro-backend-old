@@ -2,7 +2,6 @@ import {inject, Getter} from '@loopback/core';
 import {DefaultCrudRepository, repository, HasManyRepositoryFactory} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {Group, GroupRelations, User} from '../models';
-import {UserRepository} from './user.repository';
 
 export class GroupRepository extends DefaultCrudRepository<
   Group,
@@ -10,13 +9,9 @@ export class GroupRepository extends DefaultCrudRepository<
   GroupRelations
 > {
 
-  public readonly users: HasManyRepositoryFactory<User, typeof Group.prototype.id>;
-
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>,
+    @inject('datasources.db') dataSource: DbDataSource,
   ) {
     super(Group, dataSource);
-    this.users = this.createHasManyRepositoryFactoryFor('users', userRepositoryGetter,);
-    this.registerInclusionResolver('users', this.users.inclusionResolver);
   }
 }
