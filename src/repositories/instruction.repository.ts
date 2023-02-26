@@ -3,7 +3,6 @@ import {DefaultCrudRepository, repository, HasManyRepositoryFactory, BelongsToAc
 import {DbDataSource} from '../datasources';
 import {Instruction, InstructionRelations, Step, User} from '../models';
 import {StepRepository} from './step.repository';
-import {UserRepository} from './user.repository';
 
 export class InstructionRepository extends DefaultCrudRepository<
   Instruction,
@@ -11,15 +10,20 @@ export class InstructionRepository extends DefaultCrudRepository<
   InstructionRelations
 > {
 
-  public readonly steps: HasManyRepositoryFactory<Step, typeof Instruction.prototype.id>;
-
-  public readonly user: BelongsToAccessor<User, typeof Instruction.prototype.id>;
+  public readonly steps: HasManyRepositoryFactory<
+  Step,
+  typeof Step.prototype.id
+>;
 
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('StepRepository') protected stepRepositoryGetter: Getter<StepRepository>, @repository.getter('UserRepository') protected userRepositoryGetter: Getter<UserRepository>,
+    @inject('datasources.db') dataSource: DbDataSource,
+    @repository.getter('StepRepository')
+    stepRepositoryGetter: Getter<StepRepository>,
   ) {
     super(Instruction, dataSource);
-    this.user = this.createBelongsToAccessorFor('user', userRepositoryGetter,);
-    this.steps = this.createHasManyRepositoryFactoryFor('steps', stepRepositoryGetter,);
+    this.steps = this.createHasManyRepositoryFactoryFor(
+      'steps',
+      stepRepositoryGetter,
+    );
   }
 }

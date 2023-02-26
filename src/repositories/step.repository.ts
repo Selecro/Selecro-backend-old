@@ -10,12 +10,9 @@ export class StepRepository extends DefaultCrudRepository<
   StepRelations
 > {
 
-  public readonly instruction: BelongsToAccessor<Instruction, typeof Step.prototype.id>;
-
   constructor(
-    @inject('datasources.db') dataSource: DbDataSource, @repository.getter('InstructionRepository') protected instructionRepositoryGetter: Getter<InstructionRepository>,
+    @inject('datasources.db') dataSource: DbDataSource,
   ) {
     super(Step, dataSource);
-    this.instruction = this.createBelongsToAccessorFor('instruction', instructionRepositoryGetter,);
   }
 }

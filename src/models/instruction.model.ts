@@ -1,4 +1,4 @@
-import {Entity, model, property, hasMany, belongsTo} from '@loopback/repository';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Step} from './step.model';
 import {User} from './user.model';
 
@@ -8,43 +8,69 @@ enum Type {
   tezky = 'tezky'
 }
 
-@model()
+@model({
+  name: 'instructions',
+})
 export class Instruction extends Entity {
   @property({
-    type: 'number',
     id: true,
     generated: true,
+    required: true,
+    postgresql: {
+      columnName: 'id',
+      dataType: 'integer',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: 0,
+      nullable: 'NO',
+    },
   })
-  id?: number;
+  id: number;
 
   @property({
     type: 'string',
     required: true,
+    postgresql: {
+      columnName: 'name',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+    },
   })
   name: string;
 
   @property({
     type: 'string',
     required: true,
+    postgresql: {
+      columnName: 'type',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+    },
   })
   type: Type;
 
   @property({
     type: 'string',
     required: true,
+    postgresql: {
+      columnName: 'link',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+    },
   })
   link: string;
 
-  @property({
-    type: 'number',
-    required: true,
-  })
-  user_id: number;
-  @hasMany(() => Step)
+  @hasMany(()=>Step, {keyTo: 'instruction_id'})
   steps: Step[];
-
-  @belongsTo(() => User)
-  userId: number;
 
   constructor(data?: Partial<Instruction>) {
     super(data);

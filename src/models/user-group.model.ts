@@ -1,18 +1,12 @@
 import {Entity, model, property} from '@loopback/repository';
 
-enum Role {
-  admin = 'admin',
-  user = 'user'
-}
-
 @model({
-  name: 'groups',
+  name: 'users_groups',
 })
-export class Group extends Entity {
+export class UserGroup extends Entity {
   @property({
     id: true,
     generated: true,
-    type: 'number',
     required: true,
     postgresql: {
       columnName: 'id',
@@ -26,40 +20,40 @@ export class Group extends Entity {
   id: number;
 
   @property({
-    type: 'string',
-    required: true,
+    type: 'number',
+    required: false,
     postgresql: {
-      columnName: 'name',
-      dataType: 'text',
+      columnName: 'group_id',
+      dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
-      dataScale: null,
-      nullable: 'NO',
+      dataScale: 0,
+      nullable: 'YES',
     },
   })
-  name: string;
+  group_id?: number;
 
   @property({
-    type: 'string',
+    type: 'number',
     required: true,
     postgresql: {
-      columnName: 'role',
-      dataType: 'text',
+      columnName: 'user_id',
+      dataType: 'integer',
       dataLength: null,
       dataPrecision: null,
-      dataScale: null,
-      nullable: 'NO',
+      dataScale: 0,
+      nullable: 'YES',
     },
   })
-  role: Role;
+  user_id?: number;
 
-  constructor(data?: Partial<Group>) {
+  constructor(data?: Partial<UserGroup>) {
     super(data);
   }
 }
 
-export interface GroupRelations {
+export interface UserGroupRelations {
   // describe navigational properties here
 }
 
-export type GroupWithRelations = Group & GroupRelations;
+export type UserGroupWithRelations = UserGroup & UserGroupRelations;
