@@ -1,7 +1,11 @@
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Group} from './group.model';
-import {Instruction} from './instruction.model';
 import {UserGroup} from './user-group.model';
+
+enum Language {
+  CZ = 'CZ',
+  EN = 'EN'
+}
 
 @model({
   name: 'users',
@@ -64,6 +68,20 @@ export class User extends Entity {
 
   @property({
     type: 'string',
+    required: true,
+    postgresql: {
+      columnName: 'language',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+    },
+  })
+  language: Language;
+
+  @property({
+    type: 'string',
     required: false,
     postgresql: {
       columnName: 'name',
@@ -104,9 +122,13 @@ export class User extends Entity {
   })
   nick?: string;
 
-  @hasMany(() => Group, {through: {model: () => UserGroup,
-     keyTo: 'group_id',
-     keyFrom: 'user_id'}})
+  @hasMany(() => Group, {
+    through: {
+      model: () => UserGroup,
+      keyTo: 'group_id',
+      keyFrom: 'user_id'
+    }
+  })
   groups: Group[];
 
   constructor(data?: Partial<User>) {
