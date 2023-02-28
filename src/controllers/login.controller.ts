@@ -9,6 +9,7 @@ import {Credentials, UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
+import {isDomainVerified, validateCredentials} from '../services/validator.service';
 import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 const _ = require("lodash");
 
@@ -112,6 +113,8 @@ export class UserController {
       },
     })
     userData: UserSingup) {
+    validateCredentials(_.pick(userData, ['email', 'password']));
+    isDomainVerified(userData.email.split("@")[1]);
     const user: User = new User(userData);
     user.passwordHash = await this.hasher.hashPassword(userData.password);
     const savedUser = await this.userRepository.create(_.omit(user, 'password'));
