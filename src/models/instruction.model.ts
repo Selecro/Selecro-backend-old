@@ -1,6 +1,5 @@
-import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
+import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Step} from './step.model';
-import {User} from './user.model';
 
 enum Type {
   lehky = 'lehky',
@@ -69,7 +68,67 @@ export class Instruction extends Entity {
   })
   link: string;
 
-  @hasMany(()=>Step, {keyTo: 'instruction_id'})
+  @property({
+    type: 'boolean',
+    required: true,
+    postgresql: {
+      columnName: 'private',
+      dataType: 'boolean',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+      default: false,
+    },
+  })
+  private: boolean;
+
+  @property({
+    type: 'boolean',
+    required: true,
+    postgresql: {
+      columnName: 'favourite',
+      dataType: 'boolean',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+      default: false,
+    },
+  })
+  favourite: boolean;
+
+  @property({
+    type: 'boolean',
+    required: true,
+    postgresql: {
+      columnName: 'saved',
+      dataType: 'boolean',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+      default: false,
+    },
+  })
+  saved: boolean;
+
+  @property({
+    type: 'Date',
+    required: true,
+    postgresql: {
+      columnName: 'date',
+      dataType: 'Date',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+      default: Date.now(),
+    },
+  })
+  date: Date;
+
+  @hasMany(() => Step, {keyTo: 'instruction_id'})
   steps: Step[];
 
   constructor(data?: Partial<Instruction>) {

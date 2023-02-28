@@ -5,6 +5,7 @@ import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loop
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {User} from '../models';
+import {Language} from '../models/user.model';
 import {Credentials, UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
@@ -29,6 +30,11 @@ export class UserSingup {
     required: true,
   })
   username: string;
+  @property({
+    type: 'string',
+    required: true,
+  })
+  language: Language;
 }
 
 export class UserController {
