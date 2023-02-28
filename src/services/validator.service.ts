@@ -1,6 +1,5 @@
 import {HttpErrors} from '@loopback/rest';
 import * as isEmail from 'isemail';
-import {Credentials} from '../repositories/user.repository';
 
 export function validateCredentials(credentials: {email: string, password: string}) {
   if (!isEmail.validate(credentials.email)) {
@@ -12,4 +11,10 @@ export function validateCredentials(credentials: {email: string, password: strin
       'password length should be greater than 8'
     )
   }
+}
+
+export async function isDomainVerified(domain: string): Promise<boolean> {
+  const response = await fetch('https://example.com/api/verify-domain?domain=${domain}');
+  const data = await response.json();
+  return data.isVerified;
 }
