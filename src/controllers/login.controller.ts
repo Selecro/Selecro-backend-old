@@ -4,8 +4,7 @@ import {model, property, repository} from '@loopback/repository';
 import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
-import {User} from '../models';
-import {Language} from '../models/user.model';
+import {Language, User} from '../models';
 import {Credentials, UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
@@ -33,6 +32,9 @@ export class UserSingup {
   @property({
     type: 'string',
     required: true,
+    jsonSchema: {
+      enum: Object.values(Language),
+    },
   })
   language: Language;
 }
@@ -121,7 +123,7 @@ export class UserController {
     const user: User = new User(userData);
     user.passwordHash = await this.hasher.hashPassword(userData.password);
     const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-    //delete savedUser.passwdhash;
+    //delete savedUser.passwordHash;
     return savedUser;
   }
 }
