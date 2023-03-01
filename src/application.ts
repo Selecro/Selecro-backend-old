@@ -14,6 +14,10 @@ import {MySequence} from './sequence';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
+
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export {ApplicationConfig};
 export class FirstappApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
@@ -64,7 +68,7 @@ export class FirstappApplication extends BootMixin(
     // this.bind('rounds').to(10);
     // this.bind('service.user.service').toClass(MyUserService)
     // this.bind('service.jwt.service').toClass(JWTService);
-    this.bind('authentication.jwt.secret').to('dvchgdvcjsdbhcbdjbvjb');
+    this.bind('authentication.jwt.secret').to(process.env.TOKEN);
     this.bind('authentication.jwt.expiresIn').to('7h');
 
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
