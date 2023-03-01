@@ -5,7 +5,7 @@ import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loop
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
-import {Credentials, UserRepository} from '../repositories';
+import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
@@ -37,6 +37,20 @@ export class UserSingup {
     },
   })
   language: Language;
+}
+
+@model()
+export class Credentials {
+  @property({
+    type: 'string',
+    required: true,
+  })
+  email: string;
+  @property({
+    type: 'string',
+    required: true,
+  })
+  passwordHash: string;
 }
 
 export class UserController {
@@ -72,7 +86,15 @@ export class UserController {
       },
     },
   })
-  async login(@requestBody(UserSingup) credentials: Credentials): Promise<{token: string}> {
+  async login(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Credentials)
+        },
+      },
+    })
+    credentials: Credentials): Promise<{token: string}> {
     const user = await this.userService.verifyCredentials(credentials);
     const userProfile = this.userService.convertToUserProfile(user);
     const token = await this.jwtService.generateToken(userProfile);

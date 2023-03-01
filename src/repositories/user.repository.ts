@@ -6,11 +6,6 @@ import {GroupRepository} from './group.repository';
 import {UserGroupRepository} from './user-group.repository';
 import {UserLinkRepository} from './user-link.repository';
 
-export type Credentials = {
-  email: string;
-  passwordHash: string;
-}
-
 @injectable()
 export class UserRepository extends DefaultCrudRepository<
   User,

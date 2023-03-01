@@ -98,20 +98,19 @@ export class User extends Entity {
   darkmode: boolean = false;
 
   @property({
-    type: 'string',
+    type: 'date',
     required: true,
-    format: 'date',
     postgresql: {
       columnName: 'date',
-      dataType: 'string',
+      dataType: 'Date',
       dataLength: null,
       dataPrecision: null,
       dataScale: null,
       nullable: 'NO',
-      default: Date.now(),
     },
+    default: () => new Date(),
   })
-  date: string = Date.now().toString();
+  date: Date;
 
   @property({
     type: 'string',

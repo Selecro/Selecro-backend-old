@@ -114,7 +114,7 @@ export class Instruction extends Entity {
   saved: boolean;
 
   @property({
-    type: 'Date',
+    type: 'date',
     required: true,
     postgresql: {
       columnName: 'date',
@@ -123,8 +123,8 @@ export class Instruction extends Entity {
       dataPrecision: null,
       dataScale: null,
       nullable: 'NO',
-      default: Date.now(),
     },
+    default: () => new Date(),
   })
   date: Date;
 
