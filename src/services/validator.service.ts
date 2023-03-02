@@ -1,5 +1,9 @@
 import {HttpErrors} from '@loopback/rest';
+import fetch from 'cross-fetch';
 import * as isEmail from 'isemail';
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export function validateCredentials(credentials: {email: string, password: string}) {
   if (!isEmail.validate(credentials.email)) {
@@ -13,8 +17,14 @@ export function validateCredentials(credentials: {email: string, password: strin
   }
 }
 
-export async function isDomainVerified(domain: string): Promise<boolean> {
-  const response = await fetch('https://example.com/api/verify-domain?domain=${domain}');
-  const data = await response.json();
-  return data.isVerified;
+export async function isDomainVerified(email: string): Promise<boolean> {
+  try {
+    const response = await fetch('https://api.hunter.io/v2/email-verifier?email=' + email + '&api_key=' + process.env.API_KEY);
+    const data = await response.json();
+    console.log(data);
+    return true;
+  } catch (error) {
+    console.error(error);
+  }
+  return false;
 }

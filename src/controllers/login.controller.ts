@@ -10,7 +10,6 @@ import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {isDomainVerified, validateCredentials} from '../services/validator.service';
-import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 const _ = require("lodash");
 
 @model()
@@ -46,7 +45,7 @@ export class UserController {
   ) { }
 
   @post('/users/login', {
-    security: OPERATION_SECURITY_SPEC,
+    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
@@ -114,7 +113,7 @@ export class UserController {
     })
     userData: UserSingup) {
     validateCredentials(_.pick(userData, ['email', 'password']));
-    isDomainVerified(userData.email.split("@")[1]);
+    await isDomainVerified(userData.email);
     const user: User = new User(userData);
     user.passwordHash = await this.hasher.hashPassword(userData.password);
     const savedUser = await this.userRepository.create(_.omit(user, 'password'));
