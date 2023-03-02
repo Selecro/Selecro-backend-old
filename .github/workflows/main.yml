@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: "Checking out code"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: Set develop dir
         run: |
           echo "DEPLOY_DIR=dev" >> $GITHUB_ENV
