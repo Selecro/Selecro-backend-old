@@ -20,9 +20,6 @@ export class Step extends Entity {
   })
   id: number;
 
-  @belongsTo(() => Instruction)
-  instruction_id: number;
-
   @property({
     type: 'string',
     required: true,
@@ -78,6 +75,23 @@ export class Step extends Entity {
     },
   })
   popis: string;
+
+  @property({
+    type: 'string',
+    required: false,
+    postgresql: {
+      columnName: 'link',
+      dataType: 'text',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'YES',
+    },
+  })
+  link?: string;
+
+  @belongsTo(() => Instruction)
+  instruction_id: number;
 
   constructor(data?: Partial<Step>) {
     super(data);
