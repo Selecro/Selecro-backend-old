@@ -1,7 +1,7 @@
 import {TokenService, UserService} from '@loopback/authentication';
 import {BindingKey} from '@loopback/core';
+import {Credentials} from './controllers/login.controller';
 import {User} from './models';
-import {Credentials} from './repositories/user.repository';
 import {PasswordHasher} from './services/hash.password';
 
 import * as dotenv from 'dotenv';
