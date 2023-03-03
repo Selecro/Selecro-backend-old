@@ -1,8 +1,10 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
+import {get, getJsonSchemaRef, getModelSchemaRef, HttpErrors, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import _ from "lodash";
+import * as nodemailer from 'nodemailer';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
@@ -10,7 +12,9 @@ import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {isDomainVerified, validateCredentials} from '../services/validator.service';
-const _ = require("lodash");
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @model()
 export class UserSingup {
@@ -52,6 +56,16 @@ export class Credentials {
   })
   passwordHash: string;
 }
+
+let transporter = nodemailer.createTransport({
+  "host": process.env.EMAILHOST,
+  "secure": true,
+  "port": Number(process.env.EMAILPORT),
+  "auth": {
+    "user": process.env.EMAILUSER,
+    "pass": process.env.EMAILPASSWORD
+  }
+});
 
 export class UserController {
   constructor(
@@ -143,11 +157,25 @@ export class UserController {
     })
     userData: UserSingup) {
     validateCredentials(_.pick(userData, ['email', 'password']));
-    await isDomainVerified(userData.email);
-    const user: User = new User(userData);
-    user.passwordHash = await this.hasher.hashPassword(userData.password);
-    const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-    //delete savedUser.passwordHash;
-    return savedUser;
+    let someResult = await Promise.all([isDomainVerified(userData.email)]);
+    if (someResult[0] == true) {
+      const user: User = new User(userData);
+      await transporter.sendMail({
+        from: process.env.EMAILUSER,
+        to: user.email,
+        subject: "Selecro",
+        html: "xddddddd"
+      });
+      user.passwordHash = await this.hasher.hashPassword(userData.password);
+      const savedUser = await this.userRepository.create(_.omit(user, 'password'));
+      savedUser.passwordHash = "";
+      userData.password = "";
+      return savedUser;
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'email does not exist'
+      );
+    }
   }
 }

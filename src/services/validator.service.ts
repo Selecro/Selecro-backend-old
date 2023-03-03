@@ -7,7 +7,9 @@ dotenv.config();
 
 export function validateCredentials(credentials: {email: string, password: string}) {
   if (!isEmail.validate(credentials.email)) {
-    throw new HttpErrors.UnprocessableEntity('invalid Email');
+    throw new HttpErrors.UnprocessableEntity(
+      'invalid Email'
+    );
   }
 
   if (credentials.password.length < 8) {
@@ -17,14 +19,15 @@ export function validateCredentials(credentials: {email: string, password: strin
   }
 }
 
-export async function isDomainVerified(email: string): Promise<boolean> {
-  try {
-    const response = await fetch('https://api.hunter.io/v2/email-verifier?email=' + email + '&api_key=' + process.env.API_KEY);
-    const data = await response.json();
-    console.log(data);
-    return true;
-  } catch (error) {
-    console.error(error);
-  }
-  return false;
+export async function isDomainVerified(email: string): Promise<any> {
+  return fetch('https://api.hunter.io/v2/email-verifier?email=' + email + '&api_key=' + process.env.API_KEY)
+    .then(response => response.json())
+    .then(data => {
+      if (data.data.status.toString() === 'valid') {
+        return true;
+      }
+      else {
+        return false;
+      }
+    });
 }
