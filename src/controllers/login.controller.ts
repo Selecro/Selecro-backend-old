@@ -159,18 +159,27 @@ export class UserController {
     validateCredentials(_.pick(userData, ['email', 'password']));
     let someResult = await Promise.all([isDomainVerified(userData.email)]);
     if (someResult[0] == true) {
-      const user: User = new User(userData);
-      await transporter.sendMail({
-        from: process.env.EMAILUSER,
-        to: user.email,
-        subject: "Selecro",
-        html: "xddddddd"
-      });
-      user.passwordHash = await this.hasher.hashPassword(userData.password);
-      const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-      savedUser.passwordHash = "";
-      userData.password = "";
-      return savedUser;
+      let existedemail = await this.userRepository.findOne({where: {email: userData.email}});
+      let existedusername = await this.userRepository.findOne({where: {username: userData.username}});
+      if (!existedemail && !existedusername) {
+        const user: User = new User(userData);
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: "Selecro",
+          html: "xddddddd"
+        });
+        user.passwordHash = await this.hasher.hashPassword(userData.password);
+        const savedUser = await this.userRepository.create(_.omit(user, 'password'));
+        savedUser.passwordHash = "";
+        userData.password = "";
+        return savedUser;
+      }
+      else {
+        throw new HttpErrors.UnprocessableEntity(
+          'email or username already exist'
+        );
+      }
     }
     else {
       throw new HttpErrors.UnprocessableEntity(
