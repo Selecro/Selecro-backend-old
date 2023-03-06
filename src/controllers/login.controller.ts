@@ -156,7 +156,7 @@ export class UserController {
       },
     })
     userData: UserSingup) {
-    validateCredentials(_.pick(userData, ['email', 'password']));
+    validateCredentials(_.pick(userData, ['email', 'password', 'username']));
     let someResult = await Promise.all([isDomainVerified(userData.email)]);
     if (someResult[0] == true) {
       let existedemail = await this.userRepository.findOne({where: {email: userData.email}});
