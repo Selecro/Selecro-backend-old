@@ -163,17 +163,17 @@ export class UserController {
       let existedusername = await this.userRepository.findOne({where: {username: userData.username}});
       if (!existedemail && !existedusername) {
         const user: User = new User(userData);
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: "Selecro",
-          html: "xddddddd"
-        });
         user.passwordHash = await this.hasher.hashPassword(userData.password);
         const savedUser = await this.userRepository.create(_.omit(user, 'password'));
         savedUser.passwordHash = "";
         userData.password = "";
-        return savedUser;
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: "Selecro",
+          html: "Welcome to Selecro " + user.username
+        });
+        return true;
       }
       else {
         throw new HttpErrors.UnprocessableEntity(
