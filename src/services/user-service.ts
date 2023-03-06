@@ -24,7 +24,28 @@ export class MyUserService implements UserService<User, Credentials> {
     });
     if (!foundUser) {
       throw new HttpErrors.NotFound(
-        `user not found with this ${credentials.email}`,
+        `user not found with this email: ${credentials.email}`,
+      );
+    }
+
+    const passwordMatched = await this.hasher.comparePassword(
+      credentials.passwordHash,
+      foundUser.passwordHash,
+    );
+    if (!passwordMatched) {
+      throw new HttpErrors.Unauthorized('password is not valid');
+    }
+    return foundUser;
+  }
+  async verifyCredentialsUsername(credentials: Credentials): Promise<User> {
+    const foundUser = await this.userRepository.findOne({
+      where: {
+        username: credentials.email,
+      },
+    });
+    if (!foundUser) {
+      throw new HttpErrors.NotFound(
+        `user not found with this username: ${credentials.email}`,
       );
     }
 
@@ -48,5 +69,17 @@ export class MyUserService implements UserService<User, Credentials> {
         : user.surname;
     }
     return {[securityId]: `${user.id}`, name: userName, email: user.email}
+  }
+  convertToUserProfileUsername(user: User): UserProfile {
+    let userName = '';
+    if (user.name) {
+      userName = user.name;
+    }
+    if (user.surname) {
+      userName = user.name
+        ? `${user.name} ${user.surname}`
+        : user.surname;
+    }
+    return {[securityId]: `${user.id}`, name: userName, username: user.email}
   }
 }

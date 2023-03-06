@@ -95,10 +95,18 @@ export class UserController {
       },
     })
     credentials: Credentials): Promise<{token: string}> {
-    const user = await this.userService.verifyCredentials(credentials);
-    const userProfile = this.userService.convertToUserProfile(user);
-    const token = await this.jwtService.generateToken(userProfile);
-    return Promise.resolve({token: token})
+    if (credentials.email.includes("@")) {
+      const user = await this.userService.verifyCredentials(credentials);
+      const userProfile = this.userService.convertToUserProfile(user);
+      const token = await this.jwtService.generateToken(userProfile);
+      return Promise.resolve({token: token})
+    }
+    else {
+      const user = await this.userService.verifyCredentialsUsername(credentials);
+      const userProfile = this.userService.convertToUserProfileUsername(user);
+      const token = await this.jwtService.generateToken(userProfile);
+      return Promise.resolve({token: token})
+    }
   }
 
   @authenticate('jwt')
