@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import {ApplicationConfig, FirstappApplication} from './application';
 
 import * as dotenv from 'dotenv';
@@ -33,6 +34,9 @@ if (require.main === module) {
         // useful when used with OpenAPI-to-GraphQL to locate your application
         setServersFromRequest: true,
       },
+      protocol: 'https',
+      key: fs.readFileSync('../localhost.decrypt.key'),
+      cert: fs.readFileSync('../localhost.crt'),
     },
   };
   main(config).catch(err => {

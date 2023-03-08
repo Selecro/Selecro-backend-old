@@ -83,7 +83,7 @@ export class FirstappApplication extends BootMixin(
     this.api({
       openapi: '3.0.0',
       info: {
-        title: 'test application',
+        title: 'Selecro backend',
         version: '1.0.0',
       },
       paths: {},
