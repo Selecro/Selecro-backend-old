@@ -9,7 +9,7 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 //import {JWTStrategy} from './authentication-stratgies/jwt-stratgies';
 import {PasswordHasherBindings, TokenServiceBindings, TokenServiceConstants, UserServiceBindings} from './keys';
-import {GroupRepository, InstructionRepository, StepRepository, UserGroupRepository} from './repositories';
+import {GroupRepository, InstructionRepository, StepRepository, UserGroupRepository, UserLinkRepository} from './repositories';
 import {MySequence} from './sequence';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
@@ -50,6 +50,7 @@ export class FirstappApplication extends BootMixin(
     this.repository(InstructionRepository);
     this.repository(StepRepository);
     this.repository(UserGroupRepository);
+    this.repository(UserLinkRepository);
     this.repository(GroupRepository);
 
     this.projectRoot = __dirname;
@@ -82,7 +83,7 @@ export class FirstappApplication extends BootMixin(
     this.api({
       openapi: '3.0.0',
       info: {
-        title: 'test application',
+        title: 'Selecro backend',
         version: '1.0.0',
       },
       paths: {},

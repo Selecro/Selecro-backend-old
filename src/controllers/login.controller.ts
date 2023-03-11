@@ -1,16 +1,20 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
+import {get, getModelSchemaRef, HttpErrors, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import _ from "lodash";
+import * as nodemailer from 'nodemailer';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
-const _ = require("lodash");
+import {isDomainVerified, validateCredentials} from '../services/validator.service';
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @model()
 export class UserSingup {
@@ -53,6 +57,16 @@ export class Credentials {
   passwordHash: string;
 }
 
+let transporter = nodemailer.createTransport({
+  "host": process.env.EMAILHOST,
+  "secure": true,
+  "port": Number(process.env.EMAILPORT),
+  "auth": {
+    "user": process.env.EMAILUSER,
+    "pass": process.env.EMAILPASSWORD
+  }
+});
+
 export class UserController {
   constructor(
     @inject(TokenServiceBindings.TOKEN_SERVICE)
@@ -67,7 +81,7 @@ export class UserController {
   ) { }
 
   @post('/users/login', {
-    security: OPERATION_SECURITY_SPEC,
+    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
@@ -134,9 +148,18 @@ export class UserController {
   @post('/signup', {
     responses: {
       '200': {
-        description: 'User',
+        description: 'Signup',
         content: {
-          schema: getJsonSchemaRef(UserSingup)
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                signup: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -150,10 +173,35 @@ export class UserController {
       },
     })
     userData: UserSingup) {
-    const user: User = new User(userData);
-    user.passwordHash = await this.hasher.hashPassword(userData.password);
-    const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-    //delete savedUser.passwordHash;
-    return savedUser;
+    validateCredentials(_.pick(userData, ['email', 'password', 'username']));
+    let someResult = await Promise.all([isDomainVerified(userData.email)]);
+    if (someResult[0] == true) {
+      let existedemail = await this.userRepository.findOne({where: {email: userData.email}});
+      let existedusername = await this.userRepository.findOne({where: {username: userData.username}});
+      if (!existedemail && !existedusername) {
+        const user: User = new User(userData);
+        user.passwordHash = await this.hasher.hashPassword(userData.password);
+        const savedUser = await this.userRepository.create(_.omit(user, 'password'));
+        savedUser.passwordHash = "";
+        userData.password = "";
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: "Selecro",
+          html: "Welcome to Selecro " + user.username
+        });
+        return true;
+      }
+      else {
+        throw new HttpErrors.UnprocessableEntity(
+          'email or username already exist'
+        );
+      }
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'email does not exist'
+      );
+    }
   }
 }
