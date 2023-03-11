@@ -1,7 +1,7 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getJsonSchemaRef, getModelSchemaRef, HttpErrors, post, requestBody} from '@loopback/rest';
+import {get, getModelSchemaRef, HttpErrors, post, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import _ from "lodash";
 import * as nodemailer from 'nodemailer';
@@ -140,9 +140,18 @@ export class UserController {
   @post('/signup', {
     responses: {
       '200': {
-        description: 'User',
+        description: 'Signup',
         content: {
-          schema: getJsonSchemaRef(UserSingup)
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                signup: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
         },
       },
     },
