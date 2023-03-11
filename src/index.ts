@@ -35,8 +35,8 @@ if (require.main === module) {
         setServersFromRequest: true,
       },
       protocol: 'https',
-      key: fs.readFileSync('../localhost.decrypt.key'),
-      cert: fs.readFileSync('../localhost.crt'),
+      key: fs.readFileSync('localhost.decrypt.key'),
+      cert: fs.readFileSync('localhost.crt'),
     },
   };
   main(config).catch(err => {
