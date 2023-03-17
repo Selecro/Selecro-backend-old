@@ -31,7 +31,7 @@ export class UserLink extends Entity {
       nullable: 'YES',
     },
   })
-  follower_id?: number;
+  followerId?: number;
 
   @property({
     type: 'number',
@@ -45,7 +45,7 @@ export class UserLink extends Entity {
       nullable: 'YES',
     },
   })
-  followee_id?: number;
+  followeeId?: number;
 
   constructor(data?: Partial<UserLink>) {
     super(data);

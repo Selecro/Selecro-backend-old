@@ -1,17 +1,30 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getModelSchemaRef, HttpErrors, post, requestBody} from '@loopback/rest';
+import {
+  get,
+  getModelSchemaRef,
+  HttpErrors,
+  post,
+  requestBody,
+} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import _ from "lodash";
+import _ from 'lodash';
 import * as nodemailer from 'nodemailer';
-import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
+import {
+  PasswordHasherBindings,
+  TokenServiceBindings,
+  UserServiceBindings,
+} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {isDomainVerified, validateCredentials} from '../services/validator.service';
+import {
+  isDomainVerified,
+  validateCredentials,
+} from '../services/validator.service';
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -57,14 +70,14 @@ export class Credentials {
   passwordHash: string;
 }
 
-let transporter = nodemailer.createTransport({
-  "host": process.env.EMAILHOST,
-  "secure": true,
-  "port": Number(process.env.EMAILPORT),
-  "auth": {
-    "user": process.env.EMAILUSER,
-    "pass": process.env.EMAILPASSWORD
-  }
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAILHOST,
+  secure: true,
+  port: Number(process.env.EMAILPORT),
+  auth: {
+    user: process.env.EMAILUSER,
+    pass: process.env.EMAILPASSWORD,
+  },
 });
 
 export class UserController {
@@ -78,7 +91,7 @@ export class UserController {
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public hasher: BcryptHasher,
     @repository(UserRepository) public userRepository: UserRepository,
-  ) { }
+  ) {}
 
   @post('/users/login', {
     security: [{jwt: []}],
@@ -104,22 +117,24 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Credentials)
+          schema: getModelSchemaRef(Credentials),
         },
       },
     })
-    credentials: Credentials): Promise<{token: string}> {
-    if (credentials.email.includes("@")) {
+    credentials: Credentials,
+  ): Promise<{token: string}> {
+    if (credentials.email.includes('@')) {
       const user = await this.userService.verifyCredentials(credentials);
       const userProfile = this.userService.convertToUserProfile(user);
       const token = await this.jwtService.generateToken(userProfile);
-      return Promise.resolve({token: token})
-    }
-    else {
-      const user = await this.userService.verifyCredentialsUsername(credentials);
+      return Promise.resolve({token: token});
+    } else {
+      const user = await this.userService.verifyCredentialsUsername(
+        credentials,
+      );
       const userProfile = this.userService.convertToUserProfileUsername(user);
       const token = await this.jwtService.generateToken(userProfile);
-      return Promise.resolve({token: token})
+      return Promise.resolve({token: token});
     }
   }
 
@@ -140,8 +155,8 @@ export class UserController {
   })
   async me(
     @inject(AuthenticationBindings.CURRENT_USER)
-    currentUser: UserProfile,
-  ): Promise<UserProfile> {
+    currentUser: User,
+  ): Promise<User> {
     return Promise.resolve(currentUser);
   }
 
@@ -168,40 +183,43 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(UserSingup)
+          schema: getModelSchemaRef(UserSingup),
         },
       },
     })
-    userData: UserSingup) {
+    userData: UserSingup,
+  ) {
     validateCredentials(_.pick(userData, ['email', 'password', 'username']));
-    let someResult = await Promise.all([isDomainVerified(userData.email)]);
-    if (someResult[0] == true) {
-      let existedemail = await this.userRepository.findOne({where: {email: userData.email}});
-      let existedusername = await this.userRepository.findOne({where: {username: userData.username}});
+    const someResult = await Promise.all([isDomainVerified(userData.email)]);
+    if (someResult[0] === true) {
+      const existedemail = await this.userRepository.findOne({
+        where: {email: userData.email},
+      });
+      const existedusername = await this.userRepository.findOne({
+        where: {username: userData.username},
+      });
       if (!existedemail && !existedusername) {
         const user: User = new User(userData);
         user.passwordHash = await this.hasher.hashPassword(userData.password);
-        const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-        savedUser.passwordHash = "";
-        userData.password = "";
+        const savedUser = await this.userRepository.create(
+          _.omit(user, 'password'),
+        );
+        savedUser.passwordHash = '';
+        userData.password = '';
         await transporter.sendMail({
           from: process.env.EMAILUSER,
           to: user.email,
-          subject: "Selecro",
-          html: "Welcome to Selecro " + user.username
+          subject: 'Selecro',
+          html: 'Welcome to Selecro ' + user.username,
         });
         return true;
-      }
-      else {
+      } else {
         throw new HttpErrors.UnprocessableEntity(
-          'email or username already exist'
+          'email or username already exist',
         );
       }
-    }
-    else {
-      throw new HttpErrors.UnprocessableEntity(
-        'email does not exist'
-      );
+    } else {
+      throw new HttpErrors.UnprocessableEntity('email does not exist');
     }
   }
 }

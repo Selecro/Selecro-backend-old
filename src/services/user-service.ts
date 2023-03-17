@@ -15,7 +15,7 @@ export class MyUserService implements UserService<User, Credentials> {
     public userRepository: UserRepository,
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public hasher: BcryptHasher,
-  ) { }
+  ) {}
   async verifyCredentials(credentials: Credentials): Promise<User> {
     const foundUser = await this.userRepository.findOne({
       where: {
@@ -64,11 +64,9 @@ export class MyUserService implements UserService<User, Credentials> {
       userName = user.name;
     }
     if (user.surname) {
-      userName = user.name
-        ? `${user.name} ${user.surname}`
-        : user.surname;
+      userName = user.name ? `${user.name} ${user.surname}` : user.surname;
     }
-    return {[securityId]: `${user.id}`, name: userName, email: user.email}
+    return {[securityId]: `${user.id}`, name: userName, email: user.email};
   }
   convertToUserProfileUsername(user: User): UserProfile {
     let userName = '';
@@ -76,10 +74,8 @@ export class MyUserService implements UserService<User, Credentials> {
       userName = user.name;
     }
     if (user.surname) {
-      userName = user.name
-        ? `${user.name} ${user.surname}`
-        : user.surname;
+      userName = user.name ? `${user.name} ${user.surname}` : user.surname;
     }
-    return {[securityId]: `${user.id}`, name: userName, username: user.email}
+    return {[securityId]: `${user.id}`, name: userName, username: user.email};
   }
 }

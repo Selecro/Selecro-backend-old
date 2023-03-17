@@ -2,7 +2,7 @@ import {Entity, model, property} from '@loopback/repository';
 
 enum Role {
   admin = 'admin',
-  user = 'user'
+  user = 'user',
 }
 
 @model({
