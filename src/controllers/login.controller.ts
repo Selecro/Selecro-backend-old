@@ -1,30 +1,17 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {
-  get,
-  getModelSchemaRef,
-  HttpErrors,
-  post,
-  requestBody,
-} from '@loopback/rest';
+import {del, get, getModelSchemaRef, HttpErrors, param, post, put, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import _ from 'lodash';
 import * as nodemailer from 'nodemailer';
-import {
-  PasswordHasherBindings,
-  TokenServiceBindings,
-  UserServiceBindings,
-} from '../keys';
+import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {
-  isDomainVerified,
-  validateCredentials,
-} from '../services/validator.service';
+import {isDomainVerified, validateCredentials} from '../services/validator.service';
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -91,7 +78,7 @@ export class UserController {
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public hasher: BcryptHasher,
     @repository(UserRepository) public userRepository: UserRepository,
-  ) {}
+  ) { }
 
   @post('/users/login', {
     security: [{jwt: []}],
@@ -221,5 +208,45 @@ export class UserController {
     } else {
       throw new HttpErrors.UnprocessableEntity('email does not exist');
     }
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}', {
+    responses: {
+      '200': {
+        description: 'User model instance',
+        content: {'application/json': {schema: getModelSchemaRef(User)}},
+      },
+    },
+  })
+  async findById(@param.path.number('id') id: number): Promise<User> {
+    return this.userRepository.findById(id);
+  }
+
+  @authenticate('jwt')
+  @put('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User PUT success',
+      },
+    },
+  })
+  async replaceById(
+    @param.path.number('id') id: number,
+    @requestBody() user: User,
+  ): Promise<void> {
+    await this.userRepository.replaceById(id, user);
+  }
+
+  @authenticate('jwt')
+  @del('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User DELETE success',
+      },
+    },
+  })
+  async deleteById(@param.path.number('id') id: number): Promise<void> {
+    await this.userRepository.deleteById(id);
   }
 }
