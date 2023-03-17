@@ -3,7 +3,7 @@ import {
   JWTAuthenticationComponent,
   JWTAuthenticationStrategy,
   SECURITY_SCHEME_SPEC,
-  UserRepository,
+  UserRepository
 } from '@loopback/authentication-jwt';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
@@ -11,7 +11,7 @@ import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {
   RestExplorerBindings,
-  RestExplorerComponent,
+  RestExplorerComponent
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
@@ -20,14 +20,14 @@ import {
   PasswordHasherBindings,
   TokenServiceBindings,
   TokenServiceConstants,
-  UserServiceBindings,
+  UserServiceBindings
 } from './keys';
 import {
   GroupRepository,
   InstructionRepository,
   StepRepository,
   UserGroupRepository,
-  UserLinkRepository,
+  UserLinkRepository
 } from './repositories';
 import {MySequence} from './sequence';
 import {BcryptHasher} from './services/hash.password';
@@ -52,7 +52,7 @@ export class FirstappApplication extends BootMixin(
     this.bind('authentication.strategies.jwt').toClass(
       JWTAuthenticationStrategy,
     );
-    this.bind('authentication.jwt.secret').to('my-secret-key');
+    this.bind('authentication.jwt.secret').to(process.env.TOKEN);
     this.bind('authentication.jwt.expiresIn').to('3600');
 
     // setup binding
