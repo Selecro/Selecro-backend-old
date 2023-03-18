@@ -1,7 +1,7 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {del, get, getModelSchemaRef, HttpErrors, param, post, put, requestBody} from '@loopback/rest';
+import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import _ from 'lodash';
 import * as nodemailer from 'nodemailer';
@@ -219,8 +219,8 @@ export class UserController {
       },
     },
   })
-  async findById(@param.path.number('id') id: number): Promise<User> {
-    return this.userRepository.findById(id);
+  async findById(): Promise<User> {
+    return this.userRepository.findById(this.user.id);
   }
 
   @authenticate('jwt')
@@ -232,10 +232,9 @@ export class UserController {
     },
   })
   async replaceById(
-    @param.path.number('id') id: number,
     @requestBody() user: User,
   ): Promise<void> {
-    await this.userRepository.replaceById(id, user);
+    await this.userRepository.replaceById(this.user.id, user);
   }
 
   @authenticate('jwt')
@@ -246,7 +245,7 @@ export class UserController {
       },
     },
   })
-  async deleteById(@param.path.number('id') id: number): Promise<void> {
-    await this.userRepository.deleteById(id);
+  async deleteById(): Promise<void> {
+    await this.userRepository.deleteById(this.user.id);
   }
 }
