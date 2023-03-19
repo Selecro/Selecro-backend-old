@@ -1,30 +1,18 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {
-  get,
-  getModelSchemaRef,
-  HttpErrors,
-  post,
-  requestBody,
-} from '@loopback/rest';
+import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import _ from 'lodash';
 import * as nodemailer from 'nodemailer';
-import {
-  PasswordHasherBindings,
-  TokenServiceBindings,
-  UserServiceBindings,
-} from '../keys';
+import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {
-  isDomainVerified,
-  validateCredentials,
-} from '../services/validator.service';
+import {isDomainVerified, validateCredentials} from '../services/validator.service';
+const fs = require('fs');
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -91,7 +79,7 @@ export class UserController {
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public hasher: BcryptHasher,
     @repository(UserRepository) public userRepository: UserRepository,
-  ) {}
+  ) { }
 
   @post('/users/login', {
     security: [{jwt: []}],
@@ -206,12 +194,22 @@ export class UserController {
         );
         savedUser.passwordHash = '';
         userData.password = '';
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: 'Welcome to Selecro ' + user.username,
-        });
+        if (userData.language === Language.CZ) {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
+          });
+        }
+        else {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
+          });
+        }
         return true;
       } else {
         throw new HttpErrors.UnprocessableEntity(
@@ -221,5 +219,44 @@ export class UserController {
     } else {
       throw new HttpErrors.UnprocessableEntity('email does not exist');
     }
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}', {
+    responses: {
+      '200': {
+        description: 'User model instance',
+        content: {'application/json': {schema: getModelSchemaRef(User)}},
+      },
+    },
+  })
+  async findById(): Promise<User> {
+    return this.userRepository.findById(this.user.id);
+  }
+
+  @authenticate('jwt')
+  @put('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User PUT success',
+      },
+    },
+  })
+  async replaceById(
+    @requestBody() user: User,
+  ): Promise<void> {
+    await this.userRepository.replaceById(this.user.id, user);
+  }
+
+  @authenticate('jwt')
+  @del('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User DELETE success',
+      },
+    },
+  })
+  async deleteById(): Promise<void> {
+    await this.userRepository.deleteById(this.user.id);
   }
 }
