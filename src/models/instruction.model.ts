@@ -4,7 +4,7 @@ import {Step} from './step.model';
 enum Type {
   lehky = 'lehky',
   stredni = 'stredni',
-  tezky = 'tezky'
+  tezky = 'tezky',
 }
 
 @model({

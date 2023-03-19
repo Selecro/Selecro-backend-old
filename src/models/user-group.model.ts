@@ -31,7 +31,7 @@ export class UserGroup extends Entity {
       nullable: 'YES',
     },
   })
-  group_id?: number;
+  groupId?: number;
 
   @property({
     type: 'number',
@@ -45,7 +45,7 @@ export class UserGroup extends Entity {
       nullable: 'YES',
     },
   })
-  user_id?: number;
+  userId?: number;
 
   constructor(data?: Partial<UserGroup>) {
     super(data);

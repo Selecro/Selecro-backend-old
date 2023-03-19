@@ -1,16 +1,21 @@
 import {authenticate, AuthenticationBindings} from '@loopback/authentication';
 import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
-import {get, getJsonSchemaRef, getModelSchemaRef, post, requestBody} from '@loopback/rest';
+import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import _ from 'lodash';
+import * as nodemailer from 'nodemailer';
 import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
-const _ = require("lodash");
+import {isDomainVerified, validateCredentials} from '../services/validator.service';
+const fs = require('fs');
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @model()
 export class UserSingup {
@@ -53,6 +58,16 @@ export class Credentials {
   passwordHash: string;
 }
 
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAILHOST,
+  secure: true,
+  port: Number(process.env.EMAILPORT),
+  auth: {
+    user: process.env.EMAILUSER,
+    pass: process.env.EMAILPASSWORD,
+  },
+});
+
 export class UserController {
   constructor(
     @inject(TokenServiceBindings.TOKEN_SERVICE)
@@ -67,7 +82,7 @@ export class UserController {
   ) { }
 
   @post('/users/login', {
-    security: OPERATION_SECURITY_SPEC,
+    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
@@ -90,15 +105,25 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(Credentials)
+          schema: getModelSchemaRef(Credentials),
         },
       },
     })
-    credentials: Credentials): Promise<{token: string}> {
-    const user = await this.userService.verifyCredentials(credentials);
-    const userProfile = this.userService.convertToUserProfile(user);
-    const token = await this.jwtService.generateToken(userProfile);
-    return Promise.resolve({token: token})
+    credentials: Credentials,
+  ): Promise<{token: string}> {
+    if (credentials.email.includes('@')) {
+      const user = await this.userService.verifyCredentials(credentials);
+      const userProfile = this.userService.convertToUserProfile(user);
+      const token = await this.jwtService.generateToken(userProfile);
+      return Promise.resolve({token: token});
+    } else {
+      const user = await this.userService.verifyCredentialsUsername(
+        credentials,
+      );
+      const userProfile = this.userService.convertToUserProfileUsername(user);
+      const token = await this.jwtService.generateToken(userProfile);
+      return Promise.resolve({token: token});
+    }
   }
 
   @authenticate('jwt')
@@ -118,17 +143,26 @@ export class UserController {
   })
   async me(
     @inject(AuthenticationBindings.CURRENT_USER)
-    currentUser: UserProfile,
-  ): Promise<UserProfile> {
+    currentUser: User,
+  ): Promise<User> {
     return Promise.resolve(currentUser);
   }
 
   @post('/signup', {
     responses: {
       '200': {
-        description: 'User',
+        description: 'Signup',
         content: {
-          schema: getJsonSchemaRef(UserSingup)
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                signup: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -137,15 +171,92 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(UserSingup)
+          schema: getModelSchemaRef(UserSingup),
         },
       },
     })
-    userData: UserSingup) {
-    const user: User = new User(userData);
-    user.passwordHash = await this.hasher.hashPassword(userData.password);
-    const savedUser = await this.userRepository.create(_.omit(user, 'password'));
-    //delete savedUser.passwordHash;
-    return savedUser;
+    userData: UserSingup,
+  ) {
+    validateCredentials(_.pick(userData, ['email', 'password', 'username']));
+    const someResult = await Promise.all([isDomainVerified(userData.email)]);
+    if (someResult[0] === true) {
+      const existedemail = await this.userRepository.findOne({
+        where: {email: userData.email},
+      });
+      const existedusername = await this.userRepository.findOne({
+        where: {username: userData.username},
+      });
+      if (!existedemail && !existedusername) {
+        const user: User = new User(userData);
+        user.passwordHash = await this.hasher.hashPassword(userData.password);
+        const savedUser = await this.userRepository.create(
+          _.omit(user, 'password'),
+        );
+        savedUser.passwordHash = '';
+        userData.password = '';
+        if (userData.language === Language.CZ) {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
+          });
+        }
+        else {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
+          });
+        }
+        return true;
+      } else {
+        throw new HttpErrors.UnprocessableEntity(
+          'email or username already exist',
+        );
+      }
+    } else {
+      throw new HttpErrors.UnprocessableEntity('email does not exist');
+    }
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}', {
+    responses: {
+      '200': {
+        description: 'User model instance',
+        content: {'application/json': {schema: getModelSchemaRef(User)}},
+      },
+    },
+  })
+  async findById(): Promise<User> {
+    return this.userRepository.findById(this.user.id);
+  }
+
+  @authenticate('jwt')
+  @put('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User PUT success',
+      },
+    },
+  })
+  async replaceById(
+    @requestBody() user: User,
+  ): Promise<void> {
+    await this.userRepository.replaceById(this.user.id, user);
+  }
+
+  @authenticate('jwt')
+  @del('/users/{id}', {
+    responses: {
+      '204': {
+        description: 'User DELETE success',
+      },
+    },
+  })
+  async deleteById(): Promise<void> {
+    await this.userRepository.deleteById(this.user.id);
   }
 }

@@ -6,7 +6,7 @@ import {UserLink} from './user-link.model';
 
 export enum Language {
   CZ = 'CZ',
-  EN = 'EN'
+  EN = 'EN',
 }
 
 @model({
@@ -95,7 +95,7 @@ export class User extends Entity {
       default: false,
     },
   })
-  darkmode: boolean = false;
+  darkmode = false;
 
   @property({
     type: 'date',
@@ -185,17 +185,17 @@ export class User extends Entity {
   @hasMany(() => Group, {
     through: {
       model: () => UserGroup,
-      keyTo: 'group_id',
-      keyFrom: 'user_id'
-    }
+      keyTo: 'groupId',
+      keyFrom: 'userId',
+    },
   })
   groups: Group[];
 
   @hasMany(() => User, {
     through: {
       model: () => UserLink,
-      keyFrom: 'follower_id',
-      keyTo: 'followee_id',
+      keyFrom: 'followerId',
+      keyTo: 'followeeId',
     },
   })
   users: User[];

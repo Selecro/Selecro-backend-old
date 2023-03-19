@@ -1,5 +1,9 @@
 import {Getter, inject, injectable} from '@loopback/core';
-import {DefaultCrudRepository, HasManyThroughRepositoryFactory, repository} from '@loopback/repository';
+import {
+  DefaultCrudRepository,
+  HasManyThroughRepositoryFactory,
+  repository,
+} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
 import {Group, User, UserGroup, UserLink, UserRelations} from '../models';
 import {GroupRepository} from './group.repository';
@@ -12,7 +16,6 @@ export class UserRepository extends DefaultCrudRepository<
   typeof User.prototype.id,
   UserRelations
 > {
-
   public readonly groups: HasManyThroughRepositoryFactory<
     Group,
     typeof Group.prototype.id,

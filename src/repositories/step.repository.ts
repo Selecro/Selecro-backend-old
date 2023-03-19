@@ -1,18 +1,14 @@
-import {inject, Getter} from '@loopback/core';
-import {DefaultCrudRepository, repository, BelongsToAccessor} from '@loopback/repository';
+import {inject} from '@loopback/core';
+import {DefaultCrudRepository} from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {Step, StepRelations, Instruction} from '../models';
-import {InstructionRepository} from './instruction.repository';
+import {Step, StepRelations} from '../models';
 
 export class StepRepository extends DefaultCrudRepository<
   Step,
   typeof Step.prototype.id,
   StepRelations
 > {
-
-  constructor(
-    @inject('datasources.db') dataSource: DbDataSource,
-  ) {
+  constructor(@inject('datasources.db') dataSource: DbDataSource) {
     super(Step, dataSource);
   }
 }
