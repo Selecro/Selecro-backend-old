@@ -12,6 +12,7 @@ import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {isDomainVerified, validateCredentials} from '../services/validator.service';
+const fs = require('fs');
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -193,12 +194,22 @@ export class UserController {
         );
         savedUser.passwordHash = '';
         userData.password = '';
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: 'Welcome to Selecro ' + user.username,
-        });
+        if (userData.language === Language.CZ) {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
+          });
+        }
+        else {
+          await transporter.sendMail({
+            from: process.env.EMAILUSER,
+            to: user.email,
+            subject: 'Selecro',
+            html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
+          });
+        }
         return true;
       } else {
         throw new HttpErrors.UnprocessableEntity(
