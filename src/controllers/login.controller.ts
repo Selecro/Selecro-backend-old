@@ -82,7 +82,6 @@ export class UserController {
   ) { }
 
   @post('/users/login', {
-    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
