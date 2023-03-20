@@ -82,7 +82,6 @@ export class UserController {
   ) { }
 
   @post('/users/login', {
-    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
@@ -116,7 +115,8 @@ export class UserController {
       const userProfile = this.userService.convertToUserProfile(user);
       const token = await this.jwtService.generateToken(userProfile);
       return Promise.resolve({token: token});
-    } else {
+    }
+    else {
       const user = await this.userService.verifyCredentialsUsername(
         credentials,
       );
@@ -245,7 +245,38 @@ export class UserController {
   async replaceById(
     @requestBody() user: User,
   ): Promise<void> {
-    await this.userRepository.replaceById(this.user.id, user);
+    if (this.user.date == user.date && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash)) {
+      await this.userRepository.replaceById(this.user.id, user);
+    }
+    else if (this.user.date != user.date) {
+      throw new HttpErrors.UnprocessableEntity(
+        'cant change creation date',
+      );
+    }
+    else if (this.user.passwordHash != this.hasher.hashPassword(user.passwordHash)) {
+      if (this.user.language === Language.CZ) {
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: 'Selecro',
+          html: fs.readFileSync('./src/html/emailchangeCZ.html', 'utf-8'),
+        });
+      }
+      else {
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: 'Selecro',
+          html: fs.readFileSync('./src/html/emailchangeEN.html', 'utf-8'),
+        });
+      }
+      await this.userRepository.replaceById(this.user.id, user);
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'unexpected error',
+      );
+    }
   }
 
   @authenticate('jwt')
