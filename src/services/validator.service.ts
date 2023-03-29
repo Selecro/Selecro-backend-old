@@ -1,5 +1,4 @@
 import {HttpErrors} from '@loopback/rest';
-import fetch from 'cross-fetch';
 import * as isEmail from 'isemail';
 
 import * as dotenv from 'dotenv';
@@ -11,7 +10,9 @@ export function validateCredentials(credentials: {
   username: string;
 }) {
   if (!isEmail.validate(credentials.email)) {
-    throw new HttpErrors.UnprocessableEntity('invalid Email');
+    throw new HttpErrors.UnprocessableEntity(
+      'invalid Email'
+    );
   }
 
   if (credentials.password.length < 8) {
@@ -25,21 +26,4 @@ export function validateCredentials(credentials: {
       'username length should be greater than 4',
     );
   }
-}
-
-export async function isDomainVerified(email: string): Promise<boolean> {
-  return fetch(
-    'https://api.hunter.io/v2/email-verifier?email=' +
-      email +
-      '&api_key=' +
-      process.env.API_KEY,
-  )
-    .then(response => response.json())
-    .then(data => {
-      if (data.data.status.toString() === 'valid') {
-        return true;
-      } else {
-        return false;
-      }
-    });
 }

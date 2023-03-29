@@ -11,7 +11,7 @@ import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
 import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {isDomainVerified, validateCredentials} from '../services/validator.service';
+import {validateCredentials} from '../services/validator.service';
 const fs = require('fs');
 
 import * as dotenv from 'dotenv';
@@ -178,46 +178,52 @@ export class UserController {
     userData: UserSingup,
   ) {
     validateCredentials(_.pick(userData, ['email', 'password', 'username']));
-    const someResult = await Promise.all([isDomainVerified(userData.email)]);
-    if (someResult[0] === true) {
-      const existedemail = await this.userRepository.findOne({
-        where: {email: userData.email},
-      });
-      const existedusername = await this.userRepository.findOne({
-        where: {username: userData.username},
-      });
-      if (!existedemail && !existedusername) {
-        const user: User = new User(userData);
-        user.passwordHash = await this.hasher.hashPassword(userData.password);
-        const savedUser = await this.userRepository.create(
-          _.omit(user, 'password'),
-        );
-        savedUser.passwordHash = '';
-        userData.password = '';
-        if (userData.language === Language.CZ) {
-          await transporter.sendMail({
-            from: process.env.EMAILUSER,
-            to: user.email,
-            subject: 'Selecro',
-            html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
-          });
-        }
-        else {
-          await transporter.sendMail({
-            from: process.env.EMAILUSER,
-            to: user.email,
-            subject: 'Selecro',
-            html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
-          });
-        }
-        return true;
-      } else {
-        throw new HttpErrors.UnprocessableEntity(
-          'email or username already exist',
-        );
+    const existedemail = await this.userRepository.findOne({
+      where: {email: userData.email},
+    });
+    const existedusername = await this.userRepository.findOne({
+      where: {username: userData.username},
+    });
+    if (!existedemail && !existedusername) {
+      const user: User = new User(userData);
+      user.passwordHash = await this.hasher.hashPassword(userData.password);
+      const savedUser = await this.userRepository.create(
+        _.omit(user, 'password'),
+      );
+      savedUser.passwordHash = '';
+      userData.password = '';
+      if (userData.language === Language.CZ) {
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: 'Selecro',
+          html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
+        });
       }
-    } else {
-      throw new HttpErrors.UnprocessableEntity('email does not exist');
+      else {
+        await transporter.sendMail({
+          from: process.env.EMAILUSER,
+          to: user.email,
+          subject: 'Selecro',
+          html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
+        });
+      }
+      return true;
+    }
+    else if (!existedemail) {
+      throw new HttpErrors.UnprocessableEntity(
+        'email already exist',
+      );
+    }
+    else if (!existedusername) {
+      throw new HttpErrors.UnprocessableEntity(
+        'username already exist',
+      );
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'unexpected error',
+      );
     }
   }
 
@@ -245,6 +251,7 @@ export class UserController {
   async replaceById(
     @requestBody() user: User,
   ): Promise<void> {
+    ///Upravit
     await this.userRepository.replaceById(this.user.id, user);
   }
 
