@@ -4,7 +4,6 @@ import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
 import {Credentials} from '../controllers/login.controller';
-import {PasswordHasherBindings} from '../keys';
 import {User} from '../models';
 import {UserRepository} from '../repositories/user.repository';
 import {BcryptHasher} from './hash.password';
@@ -13,9 +12,9 @@ export class MyUserService implements UserService<User, Credentials> {
   constructor(
     @repository(UserRepository)
     public userRepository: UserRepository,
-    @inject(PasswordHasherBindings.PASSWORD_HASHER)
+    @inject('services.hasher')
     public hasher: BcryptHasher,
-  ) {}
+  ) { }
   async verifyCredentials(credentials: Credentials): Promise<User> {
     const foundUser = await this.userRepository.findOne({
       where: {

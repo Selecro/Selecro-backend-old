@@ -1,20 +1,18 @@
-import {authenticate, AuthenticationBindings} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {authenticate} from '@loopback/authentication';
+import {JWTService} from '@loopback/authentication-jwt';
+import {inject} from '@loopback/context';
 import {model, property, repository} from '@loopback/repository';
 import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import * as dotenv from 'dotenv';
 import _ from 'lodash';
 import * as nodemailer from 'nodemailer';
-import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {BcryptHasher} from '../services/hash.password';
-import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
 const fs = require('fs');
-
-import * as dotenv from 'dotenv';
 dotenv.config();
 
 @model()
@@ -70,13 +68,13 @@ const transporter = nodemailer.createTransport({
 
 export class UserController {
   constructor(
-    @inject(TokenServiceBindings.TOKEN_SERVICE)
+    @inject('services.jwt.service')
     public jwtService: JWTService,
-    @inject(UserServiceBindings.USER_SERVICE)
+    @inject('services.user.service')
     public userService: MyUserService,
     @inject(SecurityBindings.USER, {optional: true})
     public user: UserProfile,
-    @inject(PasswordHasherBindings.PASSWORD_HASHER)
+    @inject('services.hasher')
     public hasher: BcryptHasher,
     @repository(UserRepository) public userRepository: UserRepository,
   ) { }
@@ -111,41 +109,10 @@ export class UserController {
     })
     credentials: Credentials,
   ): Promise<{token: string}> {
-    if (credentials.email.includes('@')) {
-      const user = await this.userService.verifyCredentials(credentials);
-      const userProfile = this.userService.convertToUserProfile(user);
-      const token = await this.jwtService.generateToken(userProfile);
-      return Promise.resolve({token: token});
-    } else {
-      const user = await this.userService.verifyCredentialsUsername(
-        credentials,
-      );
-      const userProfile = this.userService.convertToUserProfileUsername(user);
-      const token = await this.jwtService.generateToken(userProfile);
-      return Promise.resolve({token: token});
-    }
-  }
-
-  @authenticate('jwt')
-  @get('/whoAmI', {
-    responses: {
-      '200': {
-        description: 'Return current user',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  })
-  async me(
-    @inject(AuthenticationBindings.CURRENT_USER)
-    currentUser: User,
-  ): Promise<User> {
-    return Promise.resolve(currentUser);
+    const user = await this.userService.verifyCredentials(credentials);
+    const userProfile = this.userService.convertToUserProfile(user);
+    const token = await this.jwtService.generateToken(userProfile);
+    return Promise.resolve({token: token});
   }
 
   @post('/signup', {

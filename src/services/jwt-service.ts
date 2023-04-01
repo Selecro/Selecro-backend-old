@@ -8,19 +8,17 @@ import {inject} from '@loopback/core';
 import {HttpErrors} from '@loopback/rest';
 import {securityId, UserProfile} from '@loopback/security';
 import {promisify} from 'util';
-import {TokenServiceBindings} from '../keys';
-
 const jwt = require('jsonwebtoken');
 const signAsync = promisify(jwt.sign);
 const verifyAsync = promisify(jwt.verify);
 
 export class JWTService implements TokenService {
   constructor(
-    @inject(TokenServiceBindings.TOKEN_SECRET)
+    @inject('authentication.jwt.secret')
     private jwtSecret: string,
-    @inject(TokenServiceBindings.TOKEN_EXPIRES_IN)
+    @inject('authentication.jwt.expiresIn')
     private jwtExpiresIn: string,
-  ) {}
+  ) { }
 
   async verifyToken(token: string): Promise<UserProfile> {
     if (!token) {

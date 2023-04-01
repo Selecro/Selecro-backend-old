@@ -1,7 +1,6 @@
 import {HttpErrors} from '@loopback/rest';
-import * as isEmail from 'isemail';
-
 import * as dotenv from 'dotenv';
+import * as isEmail from 'isemail';
 dotenv.config();
 
 export function validateCredentials(credentials: {
