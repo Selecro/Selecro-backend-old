@@ -16,46 +16,46 @@ export class MyUserService implements UserService<User, Credentials> {
     public hasher: BcryptHasher,
   ) { }
   async verifyCredentials(credentials: Credentials): Promise<User> {
-    const foundUser = await this.userRepository.findOne({
+    const foundUser0 = await this.userRepository.findOne({
       where: {
         email: credentials.email,
       },
     });
-    if (!foundUser) {
-      throw new HttpErrors.NotFound(
-        `user not found with this email: ${credentials.email}`,
-      );
-    }
-
-    const passwordMatched = await this.hasher.comparePassword(
-      credentials.passwordHash,
-      foundUser.passwordHash,
-    );
-    if (!passwordMatched) {
-      throw new HttpErrors.Unauthorized('password is not valid');
-    }
-    return foundUser;
-  }
-  async verifyCredentialsUsername(credentials: Credentials): Promise<User> {
-    const foundUser = await this.userRepository.findOne({
+    const foundUser1 = await this.userRepository.findOne({
       where: {
         username: credentials.email,
       },
     });
-    if (!foundUser) {
-      throw new HttpErrors.NotFound(
-        `user not found with this username: ${credentials.email}`,
+    if (credentials.email.includes("@")) {
+      if (!foundUser0) {
+        throw new HttpErrors.NotFound(
+          `user not found with this email: ${credentials.email}`,
+        );
+      }
+      const passwordMatched = await this.hasher.comparePassword(
+        credentials.passwordHash,
+        foundUser0.passwordHash,
       );
+      if (!passwordMatched) {
+        throw new HttpErrors.Unauthorized('password is not valid');
+      }
+      return foundUser0;
     }
-
-    const passwordMatched = await this.hasher.comparePassword(
-      credentials.passwordHash,
-      foundUser.passwordHash,
-    );
-    if (!passwordMatched) {
-      throw new HttpErrors.Unauthorized('password is not valid');
+    else {
+      if (!foundUser1) {
+        throw new HttpErrors.NotFound(
+          `user not found with this username: ${credentials.email}`,
+        );
+      }
+      const passwordMatched = await this.hasher.comparePassword(
+        credentials.passwordHash,
+        foundUser1.passwordHash,
+      );
+      if (!passwordMatched) {
+        throw new HttpErrors.Unauthorized('password is not valid');
+      }
+      return foundUser1;
     }
-    return foundUser;
   }
   convertToUserProfile(user: User): UserProfile {
     let userName = '';
@@ -66,15 +66,5 @@ export class MyUserService implements UserService<User, Credentials> {
       userName = user.name ? `${user.name} ${user.surname}` : user.surname;
     }
     return {[securityId]: `${user.id}`, name: userName, email: user.email};
-  }
-  convertToUserProfileUsername(user: User): UserProfile {
-    let userName = '';
-    if (user.name) {
-      userName = user.name;
-    }
-    if (user.surname) {
-      userName = user.name ? `${user.name} ${user.surname}` : user.surname;
-    }
-    return {[securityId]: `${user.id}`, name: userName, username: user.email};
   }
 }

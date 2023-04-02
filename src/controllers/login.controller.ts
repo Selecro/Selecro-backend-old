@@ -2,17 +2,25 @@ import {authenticate} from '@loopback/authentication';
 import {JWTService} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/context';
 import {model, property, repository} from '@loopback/repository';
-import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
+import {
+  del,
+  get,
+  getModelSchemaRef,
+  HttpErrors,
+  post,
+  put,
+  requestBody
+} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import _ from 'lodash';
-import * as nodemailer from 'nodemailer';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
+import {EmailService} from '../services/email';
 import {BcryptHasher} from '../services/hash.password';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
-const fs = require('fs');
 dotenv.config();
 
 @model()
@@ -26,12 +34,12 @@ export class UserSingup {
     type: 'string',
     required: true,
   })
-  password: string;
+  username: string;
   @property({
     type: 'string',
     required: true,
   })
-  username: string;
+  password: string;
   @property({
     type: 'string',
     required: true,
@@ -56,16 +64,6 @@ export class Credentials {
   passwordHash: string;
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAILHOST,
-  secure: true,
-  port: Number(process.env.EMAILPORT),
-  auth: {
-    user: process.env.EMAILUSER,
-    pass: process.env.EMAILPASSWORD,
-  },
-});
-
 export class UserController {
   constructor(
     @inject('services.jwt.service')
@@ -76,11 +74,12 @@ export class UserController {
     public user: UserProfile,
     @inject('services.hasher')
     public hasher: BcryptHasher,
+    @inject('services.email')
+    public emailService: EmailService,
     @repository(UserRepository) public userRepository: UserRepository,
   ) { }
 
   @post('/users/login', {
-    security: [{jwt: []}],
     responses: {
       '200': {
         description: 'Token',
@@ -111,8 +110,15 @@ export class UserController {
   ): Promise<{token: string}> {
     const user = await this.userService.verifyCredentials(credentials);
     const userProfile = this.userService.convertToUserProfile(user);
-    const token = await this.jwtService.generateToken(userProfile);
-    return Promise.resolve({token: token});
+    if (userProfile.emailVerified) {
+      const token = await this.jwtService.generateToken(userProfile);
+      return Promise.resolve({token: token});
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'email is not verified',
+      );
+    }
   }
 
   @post('/signup', {
@@ -159,30 +165,18 @@ export class UserController {
       );
       savedUser.passwordHash = '';
       userData.password = '';
-      if (userData.language === Language.CZ) {
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
-        });
+      try {
+        await this.emailService.sendVerificationEmail(savedUser);
+      } catch (error) {
+        throw new HttpErrors.InternalServerError('Error sending email');
       }
-      else {
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
-        });
-      }
-      return true;
     }
-    else if (!existedemail) {
+    else if (existedemail) {
       throw new HttpErrors.UnprocessableEntity(
         'email already exist',
       );
     }
-    else if (!existedusername) {
+    else if (existedusername) {
       throw new HttpErrors.UnprocessableEntity(
         'username already exist',
       );
@@ -192,6 +186,38 @@ export class UserController {
         'unexpected error',
       );
     }
+  }
+
+  @post('/verify-email')
+  async verifyEmail(@requestBody() requestBody: {token: string}) {
+    interface DecodedToken {
+      userId: number;
+      iat: number;
+      exp: number;
+    }
+    const {token} = requestBody;
+    const secret = process.env.JWT_SECRET ?? '';
+    let decodedToken: DecodedToken;
+    try {
+      decodedToken = jwt.verify(token, secret) as DecodedToken;
+    } catch (err) {
+      throw new Error('Invalid or expired verification token');
+    }
+
+    const {userId} = decodedToken;
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new Error('Invalid or expired verification token');
+    }
+    user.emailVerified = true;
+    try {
+      const updatedUser = await this.userRepository.update(user);
+    } catch (error) {
+      throw new Error('Failed to update user email verification status.');
+    }
+
+    return {message: 'Email address verified successfully'};
   }
 
   @authenticate('jwt')
@@ -215,9 +241,7 @@ export class UserController {
       },
     },
   })
-  async replaceById(
-    @requestBody() user: User,
-  ): Promise<void> {
+  async replaceById(@requestBody() user: User): Promise<void> {
     ///Upravit
     await this.userRepository.replaceById(this.user.id, user);
   }

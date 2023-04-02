@@ -1,15 +1,30 @@
 import {AuthenticationComponent} from '@loopback/authentication';
-import {JWTAuthenticationComponent, SECURITY_SCHEME_SPEC} from '@loopback/authentication-jwt';
+import {
+  JWTAuthenticationComponent,
+  SECURITY_SCHEME_SPEC,
+} from '@loopback/authentication-jwt';
 import {BootMixin} from '@loopback/boot';
 import {ApplicationConfig} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
-import {RestExplorerBindings, RestExplorerComponent} from '@loopback/rest-explorer';
+import {
+  RestExplorerBindings,
+  RestExplorerComponent,
+} from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import {GroupRepository, InstructionRepository, StepRepository, UserGroupRepository, UserLinkRepository, UserRepository} from './repositories';
+import {DbDataSource} from './datasources';
+import {
+  GroupRepository,
+  InstructionRepository,
+  StepRepository,
+  UserGroupRepository,
+  UserLinkRepository,
+  UserRepository,
+} from './repositories';
 import {MySequence} from './sequence';
+import {EmailService} from './services/email';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
@@ -21,9 +36,6 @@ export class FirstappApplication extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
-
-    // setup binding
-    this.setupBinding();
 
     // Add security spec
     this.addSecuritySpec();
@@ -47,6 +59,10 @@ export class FirstappApplication extends BootMixin(
     this.repository(UserGroupRepository);
     this.repository(UserLinkRepository);
     this.repository(GroupRepository);
+    this.dataSource(DbDataSource);
+
+    // setup binding
+    this.setupBinding();
 
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
@@ -66,6 +82,7 @@ export class FirstappApplication extends BootMixin(
     this.bind('services.hasher').toClass(BcryptHasher);
     this.bind('services.hasher.rounds').to(10);
     this.bind('services.user.service').toClass(MyUserService);
+    this.bind('services.email').toClass(EmailService);
   }
   addSecuritySpec(): void {
     this.api({
