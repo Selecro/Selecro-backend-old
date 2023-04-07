@@ -3,10 +3,10 @@ import {JWTService} from '@loopback/authentication-jwt';
 import {inject} from '@loopback/context';
 import {model, property, repository} from '@loopback/repository';
 import {
+  HttpErrors,
   del,
   get,
   getModelSchemaRef,
-  HttpErrors,
   post,
   put,
   requestBody
@@ -201,22 +201,25 @@ export class UserController {
     try {
       decodedToken = jwt.verify(token, secret) as DecodedToken;
     } catch (err) {
-      throw new Error('Invalid or expired verification token');
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
     }
-
     const {userId} = decodedToken;
     const user = await this.userRepository.findById(userId);
-
     if (!user) {
-      throw new Error('Invalid or expired verification token');
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
     }
     user.emailVerified = true;
     try {
-      const updatedUser = await this.userRepository.update(user);
+      await this.userRepository.update(user);
     } catch (error) {
-      throw new Error('Failed to update user email verification status.');
+      throw new HttpErrors.UnprocessableEntity(
+        'Failed to update user email verification status',
+      );
     }
-
     return {message: 'Email address verified successfully'};
   }
 
@@ -242,8 +245,22 @@ export class UserController {
     },
   })
   async replaceById(@requestBody() user: User): Promise<void> {
-    ///Upravit
-    await this.userRepository.replaceById(this.user.id, user);
+    if (this.user.date == user.date && this.user.id == user.id && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash) && this.user.emailVerified == user.emailVerified) {
+      await this.userRepository.replaceById(this.user.id, user);
+    }
+    else if (this.user.date != user.date) {
+      throw new HttpErrors.UnprocessableEntity(
+        'cant change creation date',
+      );
+    }
+    else if (this.user.passwordHash != this.hasher.hashPassword(user.passwordHash)) {
+      await this.userRepository.replaceById(this.user.id, user);
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'unexpected error',
+      );
+    }
   }
 
   @authenticate('jwt')

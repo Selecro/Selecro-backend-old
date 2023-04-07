@@ -13,7 +13,7 @@ export class EmailService {
   async sendVerificationEmail(user: User): Promise<void> {
     const token = this.generateVerificationToken(user.id);
     const url = `https://selecro.cz/verify-email?token=${token}`;
-    const body = fs.readFileSync(`./src/html/registration1${user.language}.html`, 'utf-8') + `Hi ${user.username},<br/><br/>Please verify your email address by clicking <a href="${url}">this link</a>.<br/><br/>Best,<br/>MyApp` + fs.readFileSync(`./src/html/registration1${user.language}.html`, 'utf-8');
+    const body = fs.readFileSync(`./src/html/registration1${user.language}.html`, 'utf-8') + `Hi ${user.username},<br/><br/>Please verify your email address by clicking <a href="${url}">this link</a>.<br/><br/>Best,Token vyprsi za 1 hodinu<br/>MyApp` + fs.readFileSync(`./src/html/registration1${user.language}.html`, 'utf-8');
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,
