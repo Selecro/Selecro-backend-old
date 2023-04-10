@@ -66,8 +66,10 @@
     "loopback-connector-mysql": "^6.1.0",
     "loopback-connector-postgresql": "^6.0.2",
     "mail": "^0.2.3",
+    "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.1",
+    "ssh2-sftp-client": "^9.0.4",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
@@ -76,8 +78,10 @@
     "@loopback/testlab": "^5.0.5",
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/multer": "^1.4.7",
     "@types/node": "^14.18.37",
     "@types/nodemailer": "^6.4.7",
+    "@types/ssh2-sftp-client": "^9.0.0",
     "@types/whatwg-fetch": "^0.0.33",
     "eslint": "^8.28.0",
     "source-map-support": "^0.5.21",
