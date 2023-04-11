@@ -94,6 +94,7 @@ export class User extends Entity {
       nullable: 'NO',
       default: false,
     },
+    default: false,
   })
   darkmode: boolean;
 
@@ -109,6 +110,7 @@ export class User extends Entity {
       nullable: 'NO',
       default: false,
     },
+    default: false,
   })
   emailVerified: boolean;
 
