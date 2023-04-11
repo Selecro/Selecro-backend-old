@@ -110,7 +110,13 @@ export class UserController {
   ): Promise<{token: string}> {
     const user = await this.userService.verifyCredentials(credentials);
     const userProfile = this.userService.convertToUserProfile(user);
-    if (userProfile.emailVerified) {
+    const existedemail = await this.userRepository.findOne({
+      where: {email: user.email},
+    });
+    const existedusername = await this.userRepository.findOne({
+      where: {username: user.email},
+    });
+    if (existedemail?.emailVerified || existedusername?.emailVerified) {
       const token = await this.jwtService.generateToken(userProfile);
       return Promise.resolve({token: token});
     }
@@ -214,7 +220,7 @@ export class UserController {
     }
     user.emailVerified = true;
     try {
-      await this.userRepository.update(user);
+      await this.userRepository.updateById(user.id, {emailVerified: true});
     } catch (error) {
       throw new HttpErrors.UnprocessableEntity(
         'Failed to update user email verification status',
@@ -248,29 +254,28 @@ export class UserController {
     if (this.user.date == user.date && this.user.id == user.id && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash) && this.user.emailVerified == user.emailVerified) {
       await this.userRepository.replaceById(this.user.id, user);
     }
+    else if (this.user.email != user.email) {
+      await this.emailService.sendResetEmail(user, this.user.email);
+    }
     else if (this.user.date != user.date) {
       throw new HttpErrors.UnprocessableEntity(
         'cant change creation date',
       );
     }
+    else if (this.user.emailVerified != user.emailVerified) {
+      throw new HttpErrors.UnprocessableEntity(
+        'email is not verified',
+      );
+    }
+    else if (this.user.id != user.id) {
+      throw new HttpErrors.UnprocessableEntity(
+        'cant change id',
+      );
+    }
     else if (this.user.passwordHash != this.hasher.hashPassword(user.passwordHash)) {
-      if (this.user.language === Language.CZ) {
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: fs.readFileSync('./src/html/emailchangeCZ.html', 'utf-8'),
-        });
-      }
-      else {
-        await transporter.sendMail({
-          from: process.env.EMAILUSER,
-          to: user.email,
-          subject: 'Selecro',
-          html: fs.readFileSync('./src/html/emailchangeEN.html', 'utf-8'),
-        });
-      }
-      await this.userRepository.replaceById(this.user.id, user);
+      throw new HttpErrors.UnprocessableEntity(
+        'cant change password',
+      );
     }
     else {
       throw new HttpErrors.UnprocessableEntity(
