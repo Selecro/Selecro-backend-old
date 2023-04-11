@@ -90,8 +90,8 @@ export class Step extends Entity {
   })
   link?: string;
 
-  @belongsTo(() => Instruction)
-  instructionId: number;
+  @belongsTo(() => Instruction, {name: 'id'})
+  instruction_id: number;
 
   constructor(data?: Partial<Step>) {
     super(data);

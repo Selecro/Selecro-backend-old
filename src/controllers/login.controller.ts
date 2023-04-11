@@ -1,20 +1,26 @@
-import {authenticate, AuthenticationBindings} from '@loopback/authentication';
-import {inject} from '@loopback/core';
+import {authenticate} from '@loopback/authentication';
+import {JWTService} from '@loopback/authentication-jwt';
+import {inject} from '@loopback/context';
 import {model, property, repository} from '@loopback/repository';
-import {del, get, getModelSchemaRef, HttpErrors, post, put, requestBody} from '@loopback/rest';
+import {
+  HttpErrors,
+  del,
+  get,
+  getModelSchemaRef,
+  post,
+  put,
+  requestBody
+} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
+import * as dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import _ from 'lodash';
-import * as nodemailer from 'nodemailer';
-import {PasswordHasherBindings, TokenServiceBindings, UserServiceBindings} from '../keys';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
+import {EmailService} from '../services/email';
 import {BcryptHasher} from '../services/hash.password';
-import {JWTService} from '../services/jwt-service';
 import {MyUserService} from '../services/user-service';
-import {isDomainVerified, validateCredentials} from '../services/validator.service';
-const fs = require('fs');
-
-import * as dotenv from 'dotenv';
+import {validateCredentials} from '../services/validator.service';
 dotenv.config();
 
 @model()
@@ -28,12 +34,12 @@ export class UserSingup {
     type: 'string',
     required: true,
   })
-  password: string;
+  username: string;
   @property({
     type: 'string',
     required: true,
   })
-  username: string;
+  password: string;
   @property({
     type: 'string',
     required: true,
@@ -58,26 +64,18 @@ export class Credentials {
   passwordHash: string;
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAILHOST,
-  secure: true,
-  port: Number(process.env.EMAILPORT),
-  auth: {
-    user: process.env.EMAILUSER,
-    pass: process.env.EMAILPASSWORD,
-  },
-});
-
 export class UserController {
   constructor(
-    @inject(TokenServiceBindings.TOKEN_SERVICE)
+    @inject('services.jwt.service')
     public jwtService: JWTService,
-    @inject(UserServiceBindings.USER_SERVICE)
+    @inject('services.user.service')
     public userService: MyUserService,
     @inject(SecurityBindings.USER, {optional: true})
     public user: UserProfile,
-    @inject(PasswordHasherBindings.PASSWORD_HASHER)
+    @inject('services.hasher')
     public hasher: BcryptHasher,
+    @inject('services.email')
+    public emailService: EmailService,
     @repository(UserRepository) public userRepository: UserRepository,
   ) { }
 
@@ -110,42 +108,17 @@ export class UserController {
     })
     credentials: Credentials,
   ): Promise<{token: string}> {
-    if (credentials.email.includes('@')) {
-      const user = await this.userService.verifyCredentials(credentials);
-      const userProfile = this.userService.convertToUserProfile(user);
+    const user = await this.userService.verifyCredentials(credentials);
+    const userProfile = this.userService.convertToUserProfile(user);
+    if (userProfile.emailVerified) {
       const token = await this.jwtService.generateToken(userProfile);
       return Promise.resolve({token: token});
     }
     else {
-      const user = await this.userService.verifyCredentialsUsername(
-        credentials,
+      throw new HttpErrors.UnprocessableEntity(
+        'email is not verified',
       );
-      const userProfile = this.userService.convertToUserProfileUsername(user);
-      const token = await this.jwtService.generateToken(userProfile);
-      return Promise.resolve({token: token});
     }
-  }
-
-  @authenticate('jwt')
-  @get('/whoAmI', {
-    responses: {
-      '200': {
-        description: 'Return current user',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  })
-  async me(
-    @inject(AuthenticationBindings.CURRENT_USER)
-    currentUser: User,
-  ): Promise<User> {
-    return Promise.resolve(currentUser);
   }
 
   @post('/signup', {
@@ -178,47 +151,76 @@ export class UserController {
     userData: UserSingup,
   ) {
     validateCredentials(_.pick(userData, ['email', 'password', 'username']));
-    const someResult = await Promise.all([isDomainVerified(userData.email)]);
-    if (someResult[0] === true) {
-      const existedemail = await this.userRepository.findOne({
-        where: {email: userData.email},
-      });
-      const existedusername = await this.userRepository.findOne({
-        where: {username: userData.username},
-      });
-      if (!existedemail && !existedusername) {
-        const user: User = new User(userData);
-        user.passwordHash = await this.hasher.hashPassword(userData.password);
-        const savedUser = await this.userRepository.create(
-          _.omit(user, 'password'),
-        );
-        savedUser.passwordHash = '';
-        userData.password = '';
-        if (userData.language === Language.CZ) {
-          await transporter.sendMail({
-            from: process.env.EMAILUSER,
-            to: user.email,
-            subject: 'Selecro',
-            html: fs.readFileSync('./src/html/registrationCZ.html', 'utf-8'),
-          });
-        }
-        else {
-          await transporter.sendMail({
-            from: process.env.EMAILUSER,
-            to: user.email,
-            subject: 'Selecro',
-            html: fs.readFileSync('./src/html/registrationEN.html', 'utf-8'),
-          });
-        }
-        return true;
-      } else {
-        throw new HttpErrors.UnprocessableEntity(
-          'email or username already exist',
-        );
+    const existedemail = await this.userRepository.findOne({
+      where: {email: userData.email},
+    });
+    const existedusername = await this.userRepository.findOne({
+      where: {username: userData.username},
+    });
+    if (!existedemail && !existedusername) {
+      const user: User = new User(userData);
+      user.passwordHash = await this.hasher.hashPassword(userData.password);
+      const savedUser = await this.userRepository.create(
+        _.omit(user, 'password'),
+      );
+      savedUser.passwordHash = '';
+      userData.password = '';
+      try {
+        await this.emailService.sendVerificationEmail(savedUser);
+      } catch (error) {
+        throw new HttpErrors.InternalServerError('Error sending email');
       }
-    } else {
-      throw new HttpErrors.UnprocessableEntity('email does not exist');
     }
+    else if (existedemail) {
+      throw new HttpErrors.UnprocessableEntity(
+        'email already exist',
+      );
+    }
+    else if (existedusername) {
+      throw new HttpErrors.UnprocessableEntity(
+        'username already exist',
+      );
+    }
+    else {
+      throw new HttpErrors.UnprocessableEntity(
+        'unexpected error',
+      );
+    }
+  }
+
+  @post('/verify-email')
+  async verifyEmail(@requestBody() requestBody: {token: string}) {
+    interface DecodedToken {
+      userId: number;
+      iat: number;
+      exp: number;
+    }
+    const {token} = requestBody;
+    const secret = process.env.JWT_SECRET ?? '';
+    let decodedToken: DecodedToken;
+    try {
+      decodedToken = jwt.verify(token, secret) as DecodedToken;
+    } catch (err) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
+    }
+    const {userId} = decodedToken;
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
+    }
+    user.emailVerified = true;
+    try {
+      await this.userRepository.update(user);
+    } catch (error) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Failed to update user email verification status',
+      );
+    }
+    return {message: 'Email address verified successfully'};
   }
 
   @authenticate('jwt')
@@ -242,10 +244,8 @@ export class UserController {
       },
     },
   })
-  async replaceById(
-    @requestBody() user: User,
-  ): Promise<void> {
-    if (this.user.date == user.date && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash)) {
+  async replaceById(@requestBody() user: User): Promise<void> {
+    if (this.user.date == user.date && this.user.id == user.id && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash) && this.user.emailVerified == user.emailVerified) {
       await this.userRepository.replaceById(this.user.id, user);
     }
     else if (this.user.date != user.date) {

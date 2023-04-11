@@ -94,8 +94,25 @@ export class User extends Entity {
       nullable: 'NO',
       default: false,
     },
+    default: false,
   })
-  darkmode = false;
+  darkmode: boolean;
+
+  @property({
+    type: 'boolean',
+    required: true,
+    postgresql: {
+      columnName: 'email_verified',
+      dataType: 'boolean',
+      dataLength: null,
+      dataPrecision: null,
+      dataScale: null,
+      nullable: 'NO',
+      default: false,
+    },
+    default: false,
+  })
+  emailVerified: boolean;
 
   @property({
     type: 'date',
