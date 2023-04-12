@@ -22,7 +22,7 @@ export class EmailService {
     });
   }
 
-  public generateVerificationToken(userId: number): string {
+  public generateVerificationToken(userId: any): string {
     const secret = process.env.JWT_SECRET ?? '';
     const token = jwt.sign({userId}, secret, {expiresIn: '1h'});
     return token;
@@ -40,6 +40,18 @@ export class EmailService {
       from: process.env.EMAILUSER,
       to: email,
       subject: 'Selecro: Email change',
+      html: body,
+    });
+  }
+
+  async sendPasswordChange(email: string): Promise<void> {
+    const token = this.generateVerificationToken(email);
+    const url = `https://selecro.cz/change-password?token=${token}`;
+    const body = fs.readFileSync(`./src/html/registration0EN.html`, 'utf-8') + url;
+    await EmailDataSource.sendMail({
+      from: process.env.EMAILUSER,
+      to: email,
+      subject: 'Selecro: Change password',
       html: body,
     });
   }

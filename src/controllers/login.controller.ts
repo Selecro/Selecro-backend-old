@@ -218,7 +218,6 @@ export class UserController {
         'Invalid or expired verification token',
       );
     }
-    user.emailVerified = true;
     try {
       await this.userRepository.updateById(user.id, {emailVerified: true});
     } catch (error) {
@@ -227,6 +226,52 @@ export class UserController {
       );
     }
     return {message: 'Email address verified successfully'};
+  }
+
+  @post('/send-password-change')
+  async sendPasswordChange(@requestBody() requestBody: {email: string}) {
+    try {
+      this.emailService.sendPasswordChange(requestBody.email);
+    } catch (err) {
+      throw new HttpErrors.UnprocessableEntity(
+        'error in email send',
+      );
+    }
+  }
+
+  @post('/password-change')
+  async changePassword(@requestBody() requestBody: {token: string, password0: string, password1: string}) {
+    interface DecodedToken {
+      userId: number;
+      iat: number;
+      exp: number;
+    }
+    const {token} = requestBody;
+    const secret = process.env.JWT_SECRET ?? '';
+    let decodedToken: DecodedToken;
+    try {
+      decodedToken = jwt.verify(token, secret) as DecodedToken;
+    } catch (err) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
+    }
+    const {userId} = decodedToken;
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
+    }
+    if (await this.hasher.hashPassword(requestBody.password0) == await this.hasher.hashPassword(requestBody.password1)) {
+      try {
+        await this.userRepository.updateById(user.id, {passwordHash: await this.hasher.hashPassword(requestBody.password0)});
+      } catch (error) {
+        throw new HttpErrors.UnprocessableEntity(
+          'Failed to update user password',
+        );
+      }
+    }
   }
 
   @authenticate('jwt')
@@ -256,6 +301,8 @@ export class UserController {
     }
     else if (this.user.email != user.email) {
       await this.emailService.sendResetEmail(user, this.user.email);
+      await this.userRepository.updateById(user.id, {emailVerified: false});
+      await this.emailService.sendVerificationEmail(user);
     }
     else if (this.user.date != user.date) {
       throw new HttpErrors.UnprocessableEntity(
