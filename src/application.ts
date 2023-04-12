@@ -29,6 +29,7 @@ import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
 dotenv.config();
+var cors = require('cors');
 
 export {ApplicationConfig};
 export class FirstappApplication extends BootMixin(
@@ -42,6 +43,11 @@ export class FirstappApplication extends BootMixin(
 
     // Set up the custom sequence
     this.sequence(MySequence);
+    cors({
+      origin: ['*'],
+      methods: ['GET', 'PUT', 'POST', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));
