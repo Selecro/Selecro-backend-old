@@ -44,7 +44,7 @@ export class FirstappApplication extends BootMixin(
     // Set up the custom sequence
     this.sequence(MySequence);
     cors({
-      origin: ['*'],
+      origin: ['https://develop.selecro.cz'],
       methods: ['GET', 'PUT', 'POST', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     });
