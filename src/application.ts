@@ -29,7 +29,6 @@ import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
 dotenv.config();
-var cors = require('cors');
 
 export {ApplicationConfig};
 export class FirstappApplication extends BootMixin(
@@ -43,11 +42,8 @@ export class FirstappApplication extends BootMixin(
 
     // Set up the custom sequence
     this.sequence(MySequence);
-    this.middleware(cors({
-      origin: ['https://develop.selecro.cz', 'http://localhost:4200'],
-      methods: ['GET', 'PUT', 'POST', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
+
+    this.setupCors();
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));
@@ -80,6 +76,14 @@ export class FirstappApplication extends BootMixin(
         nested: true,
       },
     };
+  }
+  setupCors() {
+    this.middleware((ctx, next) => {
+      ctx.response.header('Access-Control-Allow-Origin', '*');
+      ctx.response.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      ctx.response.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
+      return next();
+    });
   }
   setupBinding(): void {
     this.bind('services.jwt.service').toClass(JWTService);
