@@ -15,6 +15,7 @@ import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
+import {config} from '../datasources/sftp.datasource';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {EmailService} from '../services/email';
@@ -22,6 +23,8 @@ import {BcryptHasher} from '../services/hash.password';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
 dotenv.config();
+let Client = require('ssh2-sftp-client');
+let sftp = new Client();
 
 @model()
 export class UserSingup {
@@ -341,5 +344,29 @@ export class UserController {
   })
   async deleteById(): Promise<void> {
     await this.userRepository.deleteById(this.user.id);
+  }
+
+  @authenticate('jwt')
+  @get('/users/{id}/profilePicture', {
+    responses: {
+      '200': {
+        description: 'User profile picture content',
+        content: {'image/jpeg': {}},
+      },
+    },
+  })
+  async getUserProfilePicture(
+  ): Promise<void> {
+    const user = await this.userRepository.findById(this.user.id);
+    sftp.connect(config).then(() => {
+      return sftp.get(user.link);
+    }).then((data: any) => {
+      sftp.end();
+      return data;
+    }).catch((err: any) => {
+      throw new HttpErrors.UnprocessableEntity(
+        'error in get picture',
+      );
+    });
   }
 }
