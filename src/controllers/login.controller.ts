@@ -13,6 +13,7 @@ import {
 } from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
+import * as isEmail from 'isemail';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 import {config} from '../datasources/sftp.datasource';
@@ -299,30 +300,43 @@ export class UserController {
     },
   })
   async replaceById(@requestBody() user: User): Promise<void> {
-    if (this.user.date == user.date && this.user.id == user.id && this.user.passwordHash == this.hasher.hashPassword(user.passwordHash) && this.user.emailVerified == user.emailVerified) {
+    const dbuser = await this.userRepository.findById(this.user.id);
+    if (dbuser.date.toString() == new Date(user.date).toString() && dbuser.id == user.id && dbuser.passwordHash != user.passwordHash && dbuser.emailVerified == user.emailVerified) {
       await this.userRepository.replaceById(this.user.id, user);
     }
-    else if (this.user.email != user.email) {
-      await this.emailService.sendResetEmail(user, this.user.email);
+    else if (dbuser.email != user.email) {
+      if (!isEmail.validate(user.email)) {
+        throw new HttpErrors.UnprocessableEntity(
+          'invalid Email'
+        );
+      }
+      await this.emailService.sendResetEmail(dbuser, user.email);
       await this.userRepository.updateById(user.id, {emailVerified: false});
       await this.emailService.sendVerificationEmail(user);
     }
-    else if (this.user.date != user.date) {
+    else if (dbuser.date.toString() != new Date(user.date).toString()) {
+      console.log(user.date.toString())
+      console.log(dbuser.date.toString())
       throw new HttpErrors.UnprocessableEntity(
         'cant change creation date',
       );
     }
-    else if (this.user.emailVerified != user.emailVerified) {
+    else if (dbuser.link != user.link) {
+      throw new HttpErrors.UnprocessableEntity(
+        'cant change profile link',
+      );
+    }
+    else if (dbuser.emailVerified != user.emailVerified) {
       throw new HttpErrors.UnprocessableEntity(
         'email is not verified',
       );
     }
-    else if (this.user.id != user.id) {
+    else if (dbuser.id != user.id) {
       throw new HttpErrors.UnprocessableEntity(
         'cant change id',
       );
     }
-    else if (this.user.passwordHash != this.hasher.hashPassword(user.passwordHash)) {
+    else if (dbuser.passwordHash != user.passwordHash) {
       throw new HttpErrors.UnprocessableEntity(
         'cant change password',
       );
@@ -347,7 +361,7 @@ export class UserController {
   }
 
   @authenticate('jwt')
-  @get('/users/{id}/profilePicture', {
+  @get('/users/{id}/profilePictureGet', {
     responses: {
       '200': {
         description: 'User profile picture content',
@@ -369,4 +383,31 @@ export class UserController {
       );
     });
   }
+
+  /*@authenticate('jwt')
+  @get('/users/{id}/profilePictureSet', {
+    responses: {
+      '200': {
+        description: 'User profile picture content',
+        content: {'image/jpeg': {}},
+      },
+    },
+  })
+  async setUserProfilePicture(
+    @inject(RestBindings.Http.REQUEST) request: Request,
+    @inject(RestBindings.Http.RESPONSE) response: Response,
+  ): Promise<void> {
+    const user = await this.userRepository.findById(this.user.id);
+    sftp.connect(config).then(() => {
+      sftp.put(request.headers, `./profilePictures/${userId}_${file.name}`);
+      return true;
+    }).then((data: any) => {
+      sftp.end();
+      return true;
+    }).catch((err: any) => {
+      throw new HttpErrors.UnprocessableEntity(
+        'error in get picture',
+      );
+    });
+  }*/
 }
