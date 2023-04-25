@@ -301,7 +301,7 @@ export class UserController {
   })
   async replaceById(@requestBody() user: User): Promise<void> {
     const dbuser = await this.userRepository.findById(this.user.id);
-    if (dbuser.date.toString() == new Date(user.date).toString() && dbuser.id == user.id && dbuser.passwordHash != user.passwordHash && dbuser.emailVerified == user.emailVerified) {
+    if (dbuser.date.toString() == new Date(user.date).toString() && dbuser.id == user.id && dbuser.passwordHash != user.passwordHash && dbuser.emailVerified == user.emailVerified && dbuser.link == user.link) {
       await this.userRepository.replaceById(this.user.id, user);
     }
     else if (dbuser.email != user.email) {
@@ -372,18 +372,25 @@ export class UserController {
   async getUserProfilePicture(
   ): Promise<void> {
     const user = await this.userRepository.findById(this.user.id);
-    sftp.connect(config).then(() => {
-      return sftp.get(user.link);
-    }).then((data: any) => {
-      sftp.end();
-      return data;
-    }).catch((err: any) => {
+    if (user.link != null) {
+      sftp.connect(config).then(() => {
+        return sftp.get(user.link);
+      }).then((data: any) => {
+        sftp.end();
+        return data;
+      }).catch((err: any) => {
+        throw new HttpErrors.UnprocessableEntity(
+          'error in get picture',
+        );
+      });
+    }
+    else {
       throw new HttpErrors.UnprocessableEntity(
-        'error in get picture',
+        'user does not have profile picture',
       );
-    });
+    }
   }
-
+  ///////////
   /*@authenticate('jwt')
   @get('/users/{id}/profilePictureSet', {
     responses: {
@@ -398,16 +405,22 @@ export class UserController {
     @inject(RestBindings.Http.RESPONSE) response: Response,
   ): Promise<void> {
     const user = await this.userRepository.findById(this.user.id);
-    sftp.connect(config).then(() => {
-      sftp.put(request.headers, `./profilePictures/${userId}_${file.name}`);
-      return true;
-    }).then((data: any) => {
-      sftp.end();
-      return true;
-    }).catch((err: any) => {
+    if (user.link != null) {
+      sftp.connect(config).then(() => {
+        return sftp.get(user.link);
+      }).then((data: any) => {
+        sftp.end();
+        return data;
+      }).catch((err: any) => {
+        throw new HttpErrors.UnprocessableEntity(
+          'error in get picture',
+        );
+      });
+    }
+    else {
       throw new HttpErrors.UnprocessableEntity(
-        'error in get picture',
+        'user does not have profile picture',
       );
-    });
+    }
   }*/
 }

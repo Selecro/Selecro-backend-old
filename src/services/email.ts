@@ -29,7 +29,7 @@ export class EmailService {
   }
 
   async sendResetEmail(user: User, email: string | undefined): Promise<void> {
-    const body = fs.readFileSync(`./src/html/emailchange${user.language}.html`, 'utf-8');
+    const body = fs.readFileSync(`./src/html/emailchange${user.language}.html`, 'utf-8');//////////
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,
@@ -47,7 +47,7 @@ export class EmailService {
   async sendPasswordChange(email: string): Promise<void> {
     const token = this.generateVerificationToken(email);
     const url = `https://selecro.cz/change-password?token=${token}`;
-    const body = fs.readFileSync(`./src/html/registration0EN.html`, 'utf-8') + url + fs.readFileSync(`./src/html/registration1EN.html`, 'utf-8');
+    const body = fs.readFileSync(`./src/html/registration0EN.html`, 'utf-8') + url + fs.readFileSync(`./src/html/registration1EN.html`, 'utf-8');//////////
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: email,
