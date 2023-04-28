@@ -176,7 +176,7 @@ export class UserController {
       savedUser.passwordHash = '';
       userData.password = '';
       try {
-        await this.emailService.sendVerificationEmail(savedUser);
+        await this.emailService.sendRegistrationEmail(savedUser);
       } catch (error) {
         throw new HttpErrors.InternalServerError('Error sending email');
       }
@@ -199,7 +199,9 @@ export class UserController {
   }
 
   @post('/verify-email')
-  async verifyEmail(@requestBody() requestBody: {token: string}) {
+  async verifyEmail(
+    @requestBody() requestBody: {token: string}
+  ) {
     interface DecodedToken {
       userId: number;
       iat: number;
@@ -234,8 +236,18 @@ export class UserController {
 
   @post('/send-password-change')
   async sendPasswordChange(@requestBody() requestBody: {email: string}) {
+    const user = await this.userRepository.findOne({
+      where: {
+        email: requestBody.email,
+      },
+    });
+    if (!user) {
+      throw new HttpErrors.UnprocessableEntity(
+        'Invalid or expired verification token',
+      );
+    }
     try {
-      this.emailService.sendPasswordChange(requestBody.email);
+      await this.emailService.sendPasswordChange(user);
     } catch (err) {
       throw new HttpErrors.UnprocessableEntity(
         'error in email send',
@@ -269,6 +281,7 @@ export class UserController {
     }
     if (await this.hasher.hashPassword(requestBody.password0) == await this.hasher.hashPassword(requestBody.password1)) {
       try {
+        await this.emailService.sendSuccessfulyPasswordChange(user);
         await this.userRepository.updateById(user.id, {passwordHash: await this.hasher.hashPassword(requestBody.password0)});
       } catch (error) {
         throw new HttpErrors.UnprocessableEntity(
@@ -312,7 +325,6 @@ export class UserController {
       }
       await this.emailService.sendResetEmail(dbuser, user.email);
       await this.userRepository.updateById(user.id, {emailVerified: false});
-      await this.emailService.sendVerificationEmail(user);
     }
     else if (dbuser.date.toString() != new Date(user.date).toString()) {
       console.log(user.date.toString())
