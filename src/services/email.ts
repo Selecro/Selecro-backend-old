@@ -18,7 +18,7 @@ export class EmailService {
 
   async sendRegistrationEmail(user: User): Promise<void> {
     const token = this.generateVerificationToken(user.id);
-    const url = `https://selecro.cz/verify-email?token=${token}`;
+    const url = `https://selecro.cz/verification?token=${token}`;
     const body = fs.readFileSync(`./src/html/registration${user.language}.html`, 'utf-8');
     body.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
@@ -31,7 +31,7 @@ export class EmailService {
 
   async sendResetEmail(user: User, email: string | undefined): Promise<void> {
     const token = this.generateVerificationToken(user.id);
-    const url = `https://selecro.cz/verify-email?token=${token}`;
+    const url = `https://selecro.cz/verication?token=${token}`;
     const body0 = fs.readFileSync(`./src/html/verification${user.language}.html`, 'utf-8');
     const body1 = fs.readFileSync(`./src/html/emailInfo${user.language}.html`, 'utf-8');
     body0.replace('{{URL}}', url);
@@ -51,7 +51,7 @@ export class EmailService {
 
   async sendPasswordChange(user: User): Promise<void> {
     const token = this.generateVerificationToken(user.id);
-    const url = `https://selecro.cz/change-password?token=${token}`;
+    const url = `https://selecro.cz/passwdchange?token=${token}`;
     const body = fs.readFileSync(`./src/html/passwordChange${user.language}.html`, 'utf-8');
     body.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
