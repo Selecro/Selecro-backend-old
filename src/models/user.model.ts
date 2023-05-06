@@ -130,7 +130,7 @@ export class User extends Entity {
   date: Date;
 
   @property({
-    type: 'string',
+    type: 'any',
     required: false,
     postgresql: {
       columnName: 'name',
@@ -141,10 +141,10 @@ export class User extends Entity {
       nullable: 'YES',
     },
   })
-  name?: string;
+  name?: string | null;
 
   @property({
-    type: 'string',
+    type: 'any',
     required: false,
     postgresql: {
       columnName: 'surname',
@@ -155,10 +155,10 @@ export class User extends Entity {
       nullable: 'YES',
     },
   })
-  surname?: string;
+  surname?: string | null;
 
   @property({
-    type: 'string',
+    type: 'any',
     required: false,
     postgresql: {
       columnName: 'nick',
@@ -169,10 +169,10 @@ export class User extends Entity {
       nullable: 'YES',
     },
   })
-  nick?: string;
+  nick?: string | null;
 
   @property({
-    type: 'string',
+    type: 'any',
     required: false,
     postgresql: {
       columnName: 'bio',
@@ -183,10 +183,10 @@ export class User extends Entity {
       nullable: 'YES',
     },
   })
-  bio?: string;
+  bio?: string | null;
 
   @property({
-    type: 'string',
+    type: 'any',
     required: false,
     postgresql: {
       columnName: 'link',
@@ -197,7 +197,7 @@ export class User extends Entity {
       nullable: 'YES',
     },
   })
-  link?: string;
+  link?: string | null;
 
   @hasMany(() => Group, {
     through: {
