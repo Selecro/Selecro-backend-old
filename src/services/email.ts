@@ -10,48 +10,64 @@ dotenv.config();
 export class EmailService {
   constructor() { }
 
-  async sendVerificationEmail(user: User): Promise<void> {
-    const token = this.generateVerificationToken(user.id);
-    const url = `https://selecro.cz/verify-email?token=${token}`;
-    const body = fs.readFileSync(`./src/html/registration0${user.language}.html`, 'utf-8') + `Hi ${user.username},<br/><br/>Please verify your email address by clicking <a href="${url}">this link</a>.<br/><br/>Best,Token vyprsi za 1 hodinu<br/>MyApp` + fs.readFileSync(`./src/html/registration1${user.language}.html`, 'utf-8');
-    await EmailDataSource.sendMail({
-      from: process.env.EMAILUSER,
-      to: user.email,
-      subject: 'Selecro: Verify email address',
-      html: body,
-    });
-  }
-
-  public generateVerificationToken(userId: any): string {
+  public generateVerificationToken(userId: number): string {
     const secret = process.env.JWT_SECRET ?? '';
     const token = jwt.sign({userId}, secret, {expiresIn: '1h'});
     return token;
   }
 
-  async sendResetEmail(user: User, email: string | undefined): Promise<void> {
-    const body = fs.readFileSync(`./src/html/emailchange${user.language}.html`, 'utf-8');
+  async sendRegistrationEmail(user: User): Promise<void> {
+    const token = this.generateVerificationToken(user.id);
+    const url = `https://selecro.cz/verification?token=${token}`;
+    const body = fs.readFileSync(`./src/html/registration${user.language}.html`, 'utf-8');
+    body.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,
-      subject: 'Selecro: Email change',
-      html: body,
-    });
-    await EmailDataSource.sendMail({
-      from: process.env.EMAILUSER,
-      to: email,
-      subject: 'Selecro: Email change',
+      subject: 'Selecro: Registration',
       html: body,
     });
   }
 
-  async sendPasswordChange(email: string): Promise<void> {
-    const token = this.generateVerificationToken(email);
-    const url = `https://selecro.cz/change-password?token=${token}`;
-    const body = fs.readFileSync(`./src/html/registration0EN.html`, 'utf-8') + url;
+  async sendResetEmail(user: User, email: string | undefined): Promise<void> {
+    const token = this.generateVerificationToken(user.id);
+    const url = `https://selecro.cz/verication?token=${token}`;
+    const body0 = fs.readFileSync(`./src/html/verification${user.language}.html`, 'utf-8');
+    const body1 = fs.readFileSync(`./src/html/emailInfo${user.language}.html`, 'utf-8');
+    body0.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: email,
+      subject: 'Selecro: Email verification',
+      html: body0,
+    });
+    await EmailDataSource.sendMail({
+      from: process.env.EMAILUSER,
+      to: user.email,
+      subject: 'Selecro: Email change',
+      html: body1,
+    });
+  }
+
+  async sendPasswordChange(user: User): Promise<void> {
+    const token = this.generateVerificationToken(user.id);
+    const url = `https://selecro.cz/passwdchange?token=${token}`;
+    const body = fs.readFileSync(`./src/html/passwordChange${user.language}.html`, 'utf-8');
+    body.replace('{{URL}}', url);
+    await EmailDataSource.sendMail({
+      from: process.env.EMAILUSER,
+      to: user.email,
       subject: 'Selecro: Change password',
+      html: body,
+    });
+  }
+
+  async sendSuccessfulyPasswordChange(user: User): Promise<void> {
+    const body = fs.readFileSync(`./src/html/successfulyPasswordChange${user.language}.html`, 'utf-8');
+    await EmailDataSource.sendMail({
+      from: process.env.EMAILUSER,
+      to: user.email,
+      subject: 'Selecro: Successfuly changed password',
       html: body,
     });
   }
