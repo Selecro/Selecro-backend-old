@@ -1,4 +1,5 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
+import {User} from '@loopback/authentication-jwt';
+import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
 import {Step} from './step.model';
 
 enum Type {
@@ -130,6 +131,9 @@ export class Instruction extends Entity {
 
   @hasMany(() => Step, {keyTo: 'instruction_id'})
   steps: Step[];
+
+  @belongsTo(() => User, {name: 'id'})
+  user_id: number;
 
   constructor(data?: Partial<Instruction>) {
     super(data);
