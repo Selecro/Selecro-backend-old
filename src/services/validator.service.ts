@@ -9,9 +9,7 @@ export function validateCredentials(credentials: {
   username: string;
 }) {
   if (!isEmail.validate(credentials.email)) {
-    throw new HttpErrors.UnprocessableEntity(
-      'invalid Email'
-    );
+    throw new HttpErrors.UnprocessableEntity('invalid Email');
   }
 
   if (credentials.password.length < 8) {
