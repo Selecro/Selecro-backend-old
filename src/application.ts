@@ -80,8 +80,14 @@ export class FirstappApplication extends BootMixin(
   setupCors() {
     this.middleware((ctx, next) => {
       ctx.response.header('Access-Control-Allow-Origin', '*');
-      ctx.response.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-      ctx.response.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
+      ctx.response.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept',
+      );
+      ctx.response.header(
+        'Access-Control-Allow-Methods',
+        'GET, PUT, POST, DELETE, OPTIONS',
+      );
       return next();
     });
   }

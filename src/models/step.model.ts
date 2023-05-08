@@ -1,4 +1,4 @@
-import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {Entity, belongsTo, model, property} from '@loopback/repository';
 import {Instruction} from './instruction.model';
 
 @model({
@@ -88,10 +88,10 @@ export class Step extends Entity {
       nullable: 'YES',
     },
   })
-  link?: string;
+  link?: string | null;
 
   @belongsTo(() => Instruction, {name: 'id'})
-  instruction_id: number;
+  instructionId: number;
 
   constructor(data?: Partial<Step>) {
     super(data);

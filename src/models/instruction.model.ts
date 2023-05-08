@@ -1,6 +1,11 @@
-import {User} from '@loopback/authentication-jwt';
-import {belongsTo, Entity, hasMany, model, property} from '@loopback/repository';
-import {Step} from './step.model';
+import {
+  Entity,
+  belongsTo,
+  hasMany,
+  model,
+  property,
+} from '@loopback/repository';
+import {Step, User} from '.';
 
 enum Type {
   lehky = 'lehky',
@@ -119,21 +124,19 @@ export class Instruction extends Entity {
     required: true,
     postgresql: {
       columnName: 'date',
-      dataType: 'Date',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
+      dataType: 'timestamp with time zone',
       nullable: 'NO',
     },
     default: () => new Date(),
+    valueGenerator: () => 'NOW()',
   })
   date: Date;
 
-  @hasMany(() => Step, {keyTo: 'instruction_id'})
+  @hasMany(() => Step, {keyTo: 'id'})
   steps: Step[];
 
   @belongsTo(() => User, {name: 'id'})
-  user_id: number;
+  userId: number;
 
   constructor(data?: Partial<Instruction>) {
     super(data);
