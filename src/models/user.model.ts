@@ -119,16 +119,13 @@ export class User extends Entity {
     required: true,
     postgresql: {
       columnName: 'date',
-      dataType: 'time with time zone',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
+      dataType: 'timestamp with time zone',
       nullable: 'NO',
-      default: () => 'NOW()',
     },
-    default: () => 'NOW()',
+    default: () => new Date(),
+    valueGenerator: () => 'NOW()',
   })
-  date: string;
+  date: Date;
 
   @property({
     type: 'any',

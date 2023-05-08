@@ -310,8 +310,6 @@ export class UserController {
   })
   async replaceById(@requestBody() user: User): Promise<void> {
     const dbuser = await this.userRepository.findById(this.user.id);
-    console.log(dbuser.date.toString());
-    console.log(new Date(user.date).toString());
     if (
       dbuser.date.toString() === new Date(user.date).toString() &&
       dbuser.id === user.id &&

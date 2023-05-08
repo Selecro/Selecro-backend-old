@@ -9,8 +9,8 @@ const config = {
   host: process.env.SQLHOST,
   port: Number(process.env.SQLPORT),
   user: process.env.SQLUSER,
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+  password: process.env.SQLPASSWORD,
+  database: process.env.SQLDATABASE,
 };
 
 // Observe application's life cycle to disconnect the datasource when
@@ -20,8 +20,7 @@ const config = {
 @lifeCycleObserver('datasource')
 export class DbDataSource
   extends juggler.DataSource
-  implements LifeCycleObserver
-{
+  implements LifeCycleObserver {
   static dataSourceName = 'db';
   static readonly defaultConfig = config;
 
