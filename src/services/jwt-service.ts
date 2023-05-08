@@ -18,7 +18,7 @@ export class JWTService implements TokenService {
     private jwtSecret: string,
     @inject('authentication.jwt.expiresIn')
     private jwtExpiresIn: string,
-  ) { }
+  ) {}
 
   async verifyToken(token: string): Promise<UserProfile> {
     if (!token) {

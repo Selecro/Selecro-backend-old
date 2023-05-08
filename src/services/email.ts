@@ -8,7 +8,7 @@ dotenv.config();
 
 @bind({scope: BindingScope.TRANSIENT})
 export class EmailService {
-  constructor() { }
+  constructor() {}
 
   public generateVerificationToken(userId: number): string {
     const secret = process.env.JWT_SECRET ?? '';
@@ -19,8 +19,11 @@ export class EmailService {
   async sendRegistrationEmail(user: User): Promise<void> {
     const token = this.generateVerificationToken(user.id);
     const url = `https://selecro.cz/verification?token=${token}`;
-    const body = fs.readFileSync(`./src/html/registration${user.language}.html`, 'utf-8');
-    body.replace('{{URL}}', url);
+    let body = fs.readFileSync(
+      `./src/html/registration${user.language}.html`,
+      'utf-8',
+    );
+    body = body.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,
@@ -32,9 +35,15 @@ export class EmailService {
   async sendResetEmail(user: User, email: string | undefined): Promise<void> {
     const token = this.generateVerificationToken(user.id);
     const url = `https://selecro.cz/verication?token=${token}`;
-    const body0 = fs.readFileSync(`./src/html/verification${user.language}.html`, 'utf-8');
-    const body1 = fs.readFileSync(`./src/html/emailInfo${user.language}.html`, 'utf-8');
-    body0.replace('{{URL}}', url);
+    let body0 = fs.readFileSync(
+      `./src/html/verification${user.language}.html`,
+      'utf-8',
+    );
+    const body1 = fs.readFileSync(
+      `./src/html/emailInfo${user.language}.html`,
+      'utf-8',
+    );
+    body0 = body0.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: email,
@@ -52,8 +61,11 @@ export class EmailService {
   async sendPasswordChange(user: User): Promise<void> {
     const token = this.generateVerificationToken(user.id);
     const url = `https://selecro.cz/passwdchange?token=${token}`;
-    const body = fs.readFileSync(`./src/html/passwordChange${user.language}.html`, 'utf-8');
-    body.replace('{{URL}}', url);
+    let body = fs.readFileSync(
+      `./src/html/passwordChange${user.language}.html`,
+      'utf-8',
+    );
+    body = body.replace('{{URL}}', url);
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,
@@ -63,7 +75,10 @@ export class EmailService {
   }
 
   async sendSuccessfulyPasswordChange(user: User): Promise<void> {
-    const body = fs.readFileSync(`./src/html/successfulyPasswordChange${user.language}.html`, 'utf-8');
+    const body = fs.readFileSync(
+      `./src/html/successfulyPasswordChange${user.language}.html`,
+      'utf-8',
+    );
     await EmailDataSource.sendMail({
       from: process.env.EMAILUSER,
       to: user.email,

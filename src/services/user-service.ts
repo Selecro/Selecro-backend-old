@@ -14,7 +14,7 @@ export class MyUserService implements UserService<User, Credentials> {
     public userRepository: UserRepository,
     @inject('services.hasher')
     public hasher: BcryptHasher,
-  ) { }
+  ) {}
   async verifyCredentials(credentials: Credentials): Promise<User> {
     const foundUser0 = await this.userRepository.findOne({
       where: {
@@ -26,7 +26,7 @@ export class MyUserService implements UserService<User, Credentials> {
         username: credentials.email,
       },
     });
-    if (credentials.email.includes("@")) {
+    if (credentials.email.includes('@')) {
       if (!foundUser0) {
         throw new HttpErrors.NotFound(
           `user not found with this email: ${credentials.email}`,
@@ -40,8 +40,7 @@ export class MyUserService implements UserService<User, Credentials> {
         throw new HttpErrors.Unauthorized('password is not valid');
       }
       return foundUser0;
-    }
-    else {
+    } else {
       if (!foundUser1) {
         throw new HttpErrors.NotFound(
           `user not found with this username: ${credentials.email}`,
