@@ -9,7 +9,7 @@ import {
   getModelSchemaRef,
   post,
   put,
-  requestBody,
+  requestBody
 } from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
@@ -20,6 +20,7 @@ import {config} from '../datasources/sftp.datasource';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
 import {EmailService} from '../services/email';
+import {ImageUploadProvider} from '../services/file-upload.service';
 import {BcryptHasher} from '../services/hash.password';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
@@ -80,6 +81,7 @@ export class UserController {
     public hasher: BcryptHasher,
     @inject('services.email')
     public emailService: EmailService,
+    @inject('services.FileUpload') private imageUploadProvider: ImageUploadProvider,
     @repository(UserRepository) public userRepository: UserRepository,
   ) { }
 
@@ -413,4 +415,33 @@ export class UserController {
       );
     }
   }*/
+  @post('/image/upload', {
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: '',
+      },
+    },
+  })
+  async uploadImage(
+    @requestBody({
+      description: 'multipart/form-data value.',
+      required: true,
+      content: {
+        'multipart/form-data': {
+          'x-parser': 'stream',
+          schema: {type: 'object'},
+        },
+      },
+    })
+    request: Request,
+  ): Promise<void> {
+    await this.imageUploadProvider.uploadImage(request);
+  }
 }

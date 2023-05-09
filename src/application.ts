@@ -13,6 +13,7 @@ import {
 } from '@loopback/rest-explorer';
 import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
+import multer from 'multer';
 import path from 'path';
 import {DbDataSource} from './datasources';
 import {
@@ -25,6 +26,8 @@ import {
 } from './repositories';
 import {MySequence} from './sequence';
 import {EmailService} from './services/email';
+//import {FileUploadProvider} from './services/file-upload.service';
+import {ImageUploadProvider} from './services/file-upload.service';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
@@ -63,6 +66,8 @@ export class FirstappApplication extends BootMixin(
     this.repository(GroupRepository);
     this.dataSource(DbDataSource);
 
+    this.configureFileUpload(options.fileStorageDirectory);
+
     // setup binding
     this.setupBinding();
 
@@ -99,6 +104,7 @@ export class FirstappApplication extends BootMixin(
     this.bind('services.hasher.rounds').to(10);
     this.bind('services.user.service').toClass(MyUserService);
     this.bind('services.email').toClass(EmailService);
+    this.bind('services.FileUpload').toClass(ImageUploadProvider);
   }
   addSecuritySpec(): void {
     this.api({
@@ -117,5 +123,21 @@ export class FirstappApplication extends BootMixin(
       ],
       servers: [{url: '/'}],
     });
+  }
+  protected configureFileUpload(destination?: string) {
+    // Upload files to `dist/.sandbox` by default
+    destination = destination ?? path.join(__dirname, '../.sandbox');
+    this.bind('storage.directory').to(destination);
+    const multerOptions: multer.Options = {
+      storage: multer.diskStorage({
+        destination,
+        // Use the original file name as is
+        filename: (req, file, cb) => {
+          cb(null, file.originalname);
+        },
+      }),
+    };
+    // Configure the file upload service with multer options
+    this.configure('services.FileUpload').to(multerOptions);
   }
 }
