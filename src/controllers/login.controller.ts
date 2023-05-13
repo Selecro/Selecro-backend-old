@@ -26,6 +26,7 @@ import {BcryptHasher} from '../services/hash.password';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
 dotenv.config();
+const fs = require('fs');
 const Client = require('ssh2-sftp-client');
 const sftp = new Client();
 
@@ -436,24 +437,21 @@ export class UserController {
             reject(err);
           } else {
             sftp.connect(config).then(() => {
-              console.log(request.file[5])
-              return sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
+              sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
             }).then((data: any) => {
               sftp.end();
-              return data;
             }).catch((err: any) => {
-              console.log(err);
               throw new HttpErrors.UnprocessableEntity(
                 'error in get picture',
               );
             });
-            await this.userRepository.updateById(user.id, {link: request.file});
+            await this.userRepository.updateById(user.id, {link: request.file.filename});
+            fs.unlink("./public" + request.file.filename);
             resolve();
           }
         });
       });
     } catch (error) {
-      console.log(error);
       throw new HttpErrors.InternalServerError('Failed to upload file');
     }
   }
