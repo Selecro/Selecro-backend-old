@@ -437,10 +437,10 @@ export class UserController {
             reject(err);
           } else {
             sftp.connect(config).then(() => {
-              sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
+              return sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
             }).then((data: any) => {
               sftp.end();
-              return true;
+              return data;
             }).catch((err: any) => {
               throw new HttpErrors.UnprocessableEntity(
                 'error in get picture',
