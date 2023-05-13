@@ -396,7 +396,7 @@ export class UserController {
             },
           },
         },
-        description: '',
+        description: 'Picture successfully uploaded',
       },
     },
   })
@@ -451,16 +451,7 @@ export class UserController {
           }
         });
       });
-      fs.unlink("./public/" + request.file.filename, function (err: any) {
-        if (err) {
-          // handle the error here
-          console.error(err);
-        } else {
-          // file deleted successfully
-          console.log("File deleted");
-          return;
-        }
-      });
+      await fs.unlink("./public/" + request.file.filename);
     } catch (error) {
       throw new HttpErrors.InternalServerError('Failed to upload file');
     }
