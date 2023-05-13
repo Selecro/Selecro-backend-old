@@ -67,18 +67,20 @@
     "loopback-connector-mysql": "^6.1.0",
     "loopback-connector-postgresql": "^6.0.2",
     "mail": "^0.2.3",
-    "multer": "^1.4.4",
+    "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.1",
     "sharp": "^0.32.1",
     "ssh2-sftp-client": "^9.0.4",
-    "tslib": "^2.5.0"
+    "tslib": "^2.5.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@loopback/build": "^9.0.10",
     "@loopback/eslint-config": "^13.0.10",
     "@loopback/testlab": "^5.0.10",
     "@types/bcryptjs": "^2.4.2",
+    "@types/express": "^4.17.7",
     "@types/express-serve-static-core": "^4.17.33",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/multer": "^1.4.7",
