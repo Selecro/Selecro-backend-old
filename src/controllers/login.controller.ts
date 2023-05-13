@@ -436,8 +436,8 @@ export class UserController {
             reject(err);
           } else {
             sftp.connect(config).then(() => {
-              console.log(request.file)
-              return sftp.put("./public/" + request.file.filename, "/users/");
+              console.log(request.file[5])
+              return sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
             }).then((data: any) => {
               sftp.end();
               return data;
