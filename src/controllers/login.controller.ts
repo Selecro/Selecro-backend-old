@@ -436,7 +436,8 @@ export class UserController {
             reject(err);
           } else {
             sftp.connect(config).then(() => {
-              return sftp.put("./public/" + request.filename, "/users/");
+              console.log(request.file)
+              return sftp.put("./public/" + request.file.filename, "/users/");
             }).then((data: any) => {
               sftp.end();
               return data;
@@ -446,7 +447,7 @@ export class UserController {
                 'error in get picture',
               );
             });
-            await this.userRepository.updateById(user.id, {link: request.filename});
+            await this.userRepository.updateById(user.id, {link: request.file});
             resolve();
           }
         });
