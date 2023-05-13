@@ -363,7 +363,7 @@ export class UserController {
     },
   })
   async getUserProfilePicture(): Promise<void> {
-    const user = await this.userRepository.findById(12);
+    const user = await this.userRepository.findById(this.user.id);
     if (user.link != null) {
       sftp
         .connect(config)
@@ -436,7 +436,7 @@ export class UserController {
             reject(err);
           } else {
             sftp.connect(config).then(() => {
-              return sftp.put("./public" + request.filename, "/users/");
+              return sftp.put("./public/" + request.filename, "/users/");
             }).then((data: any) => {
               sftp.end();
               return data;
