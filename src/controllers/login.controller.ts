@@ -447,7 +447,15 @@ export class UserController {
               );
             });
             await this.userRepository.updateById(user.id, {link: request.file.filename});
-            fs.unlink("./public/" + request.file.filename);
+            fs.unlink("./public/" + request.file.filename, function (err: any) {
+              if (err) {
+                // handle the error here
+                console.error(err);
+              } else {
+                // file deleted successfully
+                console.log("File deleted");
+              }
+            });
             resolve();
           }
         });
