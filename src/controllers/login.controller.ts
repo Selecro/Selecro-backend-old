@@ -450,15 +450,16 @@ export class UserController {
             resolve();
           }
         });
-        fs.unlink("./public/" + request.file.filename, function (err: any) {
-          if (err) {
-            // handle the error here
-            console.error(err);
-          } else {
-            // file deleted successfully
-            console.log("File deleted");
-          }
-        });
+      });
+      fs.unlink("./public/" + request.file.filename, function (err: any) {
+        if (err) {
+          // handle the error here
+          console.error(err);
+        } else {
+          // file deleted successfully
+          console.log("File deleted");
+          return;
+        }
       });
     } catch (error) {
       throw new HttpErrors.InternalServerError('Failed to upload file');
