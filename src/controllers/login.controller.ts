@@ -441,6 +441,7 @@ export class UserController {
               sftp.end();
               return data;
             }).catch((err: any) => {
+              console.log(err);
               throw new HttpErrors.UnprocessableEntity(
                 'error in get picture',
               );
@@ -451,6 +452,7 @@ export class UserController {
         });
       });
     } catch (error) {
+      console.log(error);
       throw new HttpErrors.InternalServerError('Failed to upload file');
     }
   }
