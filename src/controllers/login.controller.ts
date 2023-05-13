@@ -368,7 +368,7 @@ export class UserController {
       sftp
         .connect(config)
         .then(async () => {
-          await sftp.get('/users/' + user.link);
+          return await sftp.get('/users/' + user.link);
         })
         .then(() => {
           sftp.end();
