@@ -440,15 +440,6 @@ export class UserController {
               return sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
             }).then((data: any) => {
               sftp.end();
-              fs.unlink("./public/" + request.file.filename, function (err: any) {
-                if (err) {
-                  // handle the error here
-                  console.error(err);
-                } else {
-                  // file deleted successfully
-                  console.log("File deleted");
-                }
-              });
               return data;
             }).catch((err: any) => {
               throw new HttpErrors.UnprocessableEntity(
@@ -457,6 +448,15 @@ export class UserController {
             });
             await this.userRepository.updateById(user.id, {link: request.file.filename});
             resolve();
+          }
+        });
+        fs.unlink("./public/" + request.file.filename, function (err: any) {
+          if (err) {
+            // handle the error here
+            console.error(err);
+          } else {
+            // file deleted successfully
+            console.log("File deleted");
           }
         });
       });
