@@ -4,18 +4,20 @@ import {inject} from '@loopback/context';
 import {model, property, repository} from '@loopback/repository';
 import {
   HttpErrors,
+  RestBindings,
   del,
   get,
   getModelSchemaRef,
   post,
   put,
-  requestBody,
+  requestBody
 } from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
 import * as isEmail from 'isemail';
 import jwt from 'jsonwebtoken';
 import _ from 'lodash';
+import multer from 'multer';
 import {config} from '../datasources/sftp.datasource';
 import {Language, User} from '../models';
 import {UserRepository} from '../repositories';
@@ -361,17 +363,18 @@ export class UserController {
     },
   })
   async getUserProfilePicture(): Promise<void> {
-    const user = await this.userRepository.findById(this.user.id);
+    const user = await this.userRepository.findById(12);
     if (user.link != null) {
       sftp
         .connect(config)
-        .then(() => {
-          return sftp.get(user.link);
+        .then(async () => {
+          return await sftp.get("/users/" + user.link);
         })
         .then(() => {
           sftp.end();
         })
-        .catch(() => {
+        .catch((error: any) => {
+          console.log(error);
           throw new HttpErrors.UnprocessableEntity('error in get picture');
         });
     } else {
@@ -380,37 +383,75 @@ export class UserController {
       );
     }
   }
-  ///////////
-  /*@authenticate('jwt')
-  @get('/users/{id}/profilePictureSet', {
+
+  @authenticate('jwt')
+  @post('/users/{id}/profilePictureSet', {
     responses: {
-      '200': {
-        description: 'User profile picture content',
-        content: {'image/jpeg': {}},
+      200: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+            },
+          },
+        },
+        description: '',
       },
     },
   })
-  async setUserProfilePicture(
-    @inject(RestBindings.Http.REQUEST) request: Request,
-    @inject(RestBindings.Http.RESPONSE) response: Response,
+  async uploadImage(
+    @requestBody({
+      description: 'multipart/form-data for files/fields',
+      required: true,
+      content: {
+        'multipart/form-data': {
+          'x-parser': 'stream',
+          schema: {
+            type: 'object',
+            properties: {
+              file: {type: 'string', format: 'binary'},
+            },
+          },
+        },
+      },
+    })
+    request: Request | any,
+    @inject(RestBindings.Http.RESPONSE) response: Response | any,
   ): Promise<void> {
     const user = await this.userRepository.findById(this.user.id);
-    if (user.link != null) {
-      sftp.connect(config).then(() => {
-        return sftp.get(user.link);
-      }).then((data: any) => {
-        sftp.end();
-        return data;
-      }).catch((err: any) => {
-        throw new HttpErrors.UnprocessableEntity(
-          'error in get picture',
-        );
+    const storage = multer.diskStorage({
+      destination: function (req, file, cb) {
+        cb(null, "./public");
+      },
+      filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, file.fieldname + '-' + uniqueSuffix);
+      },
+    });
+    const upload = multer({storage: storage});
+    try {
+      await new Promise<void>((resolve, reject) => {
+        upload.single('image')(request, response, async (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            sftp.connect(config).then(() => {
+              return sftp.put("./public" + request.file.filename, "/users/");
+            }).then((data: any) => {
+              sftp.end();
+              return data;
+            }).catch((err: any) => {
+              throw new HttpErrors.UnprocessableEntity(
+                'error in get picture',
+              );
+            });
+            await this.userRepository.updateById(user.id, {link: request.file.filename});
+            resolve();
+          }
+        });
       });
+    } catch (error) {
+      throw new HttpErrors.InternalServerError('Failed to upload file');
     }
-    else {
-      throw new HttpErrors.UnprocessableEntity(
-        'user does not have profile picture',
-      );
-    }
-  }*/
+  }
 }
