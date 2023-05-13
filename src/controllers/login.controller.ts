@@ -362,20 +362,22 @@ export class UserController {
       },
     },
   })
-  async getUserProfilePicture(): Promise<void> {
+  async getUserProfilePicture(): Promise<Buffer> {
     const user = await this.userRepository.findById(this.user.id);
     if (user.link != null) {
-      sftp
-        .connect(config)
+      const sftpResponse = await sftp.connect(config)
         .then(async () => {
           return await sftp.get('/users/' + user.link);
         })
-        .then(() => {
+        .then((response: any) => {
           sftp.end();
+          return response;
         })
         .catch(() => {
           throw new HttpErrors.UnprocessableEntity('error in get picture');
         });
+
+      return sftpResponse;
     } else {
       throw new HttpErrors.UnprocessableEntity(
         'user does not have profile picture',
