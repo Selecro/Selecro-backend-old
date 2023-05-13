@@ -440,13 +440,14 @@ export class UserController {
               sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
             }).then((data: any) => {
               sftp.end();
+              return true;
             }).catch((err: any) => {
               throw new HttpErrors.UnprocessableEntity(
                 'error in get picture',
               );
             });
             await this.userRepository.updateById(user.id, {link: request.file.filename});
-            fs.unlink("./public" + request.file.filename);
+            fs.unlink("./public/" + request.file.filename);
             resolve();
           }
         });
