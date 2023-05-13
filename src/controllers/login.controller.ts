@@ -447,7 +447,7 @@ export class UserController {
               );
             });
             await this.userRepository.updateById(user.id, {link: request.file.filename});
-            //fs.unlink("./public/" + request.file.filename);
+            fs.unlink("./public/" + request.file.filename);
             resolve();
           }
         });
