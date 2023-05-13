@@ -10,7 +10,7 @@ import {
   getModelSchemaRef,
   post,
   put,
-  requestBody
+  requestBody,
 } from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import * as dotenv from 'dotenv';
@@ -26,7 +26,6 @@ import {BcryptHasher} from '../services/hash.password';
 import {MyUserService} from '../services/user-service';
 import {validateCredentials} from '../services/validator.service';
 dotenv.config();
-const fs = require('fs');
 const Client = require('ssh2-sftp-client');
 const sftp = new Client();
 
@@ -369,13 +368,12 @@ export class UserController {
       sftp
         .connect(config)
         .then(async () => {
-          return await sftp.get("/users/" + user.link);
+          await sftp.get('/users/' + user.link);
         })
         .then(() => {
           sftp.end();
         })
-        .catch((error: any) => {
-          console.log(error);
+        .catch(() => {
           throw new HttpErrors.UnprocessableEntity('error in get picture');
         });
     } else {
@@ -421,39 +419,33 @@ export class UserController {
   ): Promise<void> {
     const user = await this.userRepository.findById(this.user.id);
     const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
+      destination: function (_req, _file, cb) {
         cb(null, "./public");
       },
-      filename: function (req, file, cb) {
+      filename: function (_req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, file.fieldname + '-' + uniqueSuffix);
       },
     });
     const upload = multer({storage: storage});
     try {
-      await new Promise<void>((resolve, reject) => {
-        upload.single('image')(request, response, async (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            sftp.connect(config).then(() => {
-              return sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
-            }).then((data: any) => {
-              sftp.end();
-              return data;
-            }).catch((err: any) => {
-              throw new HttpErrors.UnprocessableEntity(
-                'error in get picture',
-              );
-            });
+      upload.single('image')(request, response, async (err) => {
+        if (err) {
+          throw new HttpErrors.UnprocessableEntity('Error in uploading file');
+        } else {
+          try {
+            await sftp.connect(config);
+            await sftp.put("./public/" + request.file.filename, "users/" + request.file.filename);
+            await sftp.end();
             await this.userRepository.updateById(user.id, {link: request.file.filename});
-            resolve();
+          } catch (error) {
+            throw new HttpErrors.UnprocessableEntity('Error in uploading file to SFTP');
           }
-        });
+        }
       });
-      await fs.unlink("./public/" + request.file.filename);
-    } catch (error) {
-      throw new HttpErrors.InternalServerError('Failed to upload file');
+    }
+    catch (error) {
+      throw new HttpErrors.UnprocessableEntity('Error in uploading file');
     }
   }
 }
