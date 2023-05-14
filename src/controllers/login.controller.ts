@@ -272,7 +272,7 @@ export class UserController {
         'Invalid or expired verification token',
       );
     }
-    if (await this.hasher.comparePassword(request.password0, request.password1)) {
+    if (request.password0 === request.password1) {
       try {
         await this.emailService.sendSuccessfulyPasswordChange(user);
         await this.userRepository.updateById(user.id, {
