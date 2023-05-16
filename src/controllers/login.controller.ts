@@ -443,6 +443,7 @@ export class UserController {
             await sftp.end();
             await this.userRepository.updateById(user.id, {link: request.file.filename});
           } catch (error) {
+            console.log(error);
             throw new HttpErrors.UnprocessableEntity('Error in uploading file to SFTP');
           }
         }
