@@ -452,4 +452,35 @@ export class UserController {
       throw new HttpErrors.UnprocessableEntity('Error in uploading file');
     }
   }
+
+  @authenticate('jwt')
+  @get('/users/{id}/profilePictureDel', {
+    responses: {
+      '200': {
+        description: 'User picture DELETE success',
+      },
+    },
+  })
+  async delUserProfilePicture(): Promise<Buffer> {
+    const user = await this.userRepository.findById(this.user.id);
+    if (user.link != null) {
+      const sftpResponse = await sftp.connect(config)
+        .then(async () => {
+          await this.userRepository.updateById(user.id, {link: ""});
+          return await sftp.del('/users/' + user.link);
+        })
+        .then((response: any) => {
+          sftp.end();
+          return response;
+        })
+        .catch(() => {
+          throw new HttpErrors.UnprocessableEntity('error in del picture');
+        });
+      return sftpResponse;
+    } else {
+      throw new HttpErrors.UnprocessableEntity(
+        'user does not have profile picture',
+      );
+    }
+  }
 }
