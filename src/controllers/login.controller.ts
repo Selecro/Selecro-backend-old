@@ -252,7 +252,7 @@ export class UserController {
     });
     if (!user) {
       throw new HttpErrors.UnprocessableEntity(
-        'Invalid or expired verification token',
+        'email not recognized',
       );
     }
     try {
