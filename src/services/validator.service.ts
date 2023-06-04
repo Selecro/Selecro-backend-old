@@ -12,13 +12,13 @@ export function validateCredentials(credentials: {
     throw new HttpErrors.UnprocessableEntity('invalid Email');
   }
 
-  if (credentials.password.length < 8) {
+  if (credentials.password.length <= 8) {
     throw new HttpErrors.UnprocessableEntity(
       'password length should be greater than 8',
     );
   }
 
-  if (credentials.username.length < 4) {
+  if (credentials.username.length <= 4) {
     throw new HttpErrors.UnprocessableEntity(
       'username length should be greater than 4',
     );

@@ -26,9 +26,7 @@ export class JWTService implements TokenService {
         `Error verifying token : 'token' is null`,
       );
     }
-
     let userProfile: UserProfile;
-
     try {
       // decode user profile from token
       const decodedToken = await verifyAsync(token, this.jwtSecret);
@@ -69,7 +67,6 @@ export class JWTService implements TokenService {
     } catch (error) {
       throw new HttpErrors.Unauthorized(`Error encoding token : ${error}`);
     }
-
     return token;
   }
 }

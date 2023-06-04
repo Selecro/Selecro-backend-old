@@ -12,7 +12,10 @@ export class EmailService {
 
   public generateVerificationToken(userId: number): string {
     const secret = process.env.JWT_SECRET ?? '';
-    const token = jwt.sign({userId}, secret, {expiresIn: '1h'});
+    const token = jwt.sign({userId}, secret, {
+      expiresIn: '1h',
+      algorithm: 'RS256',
+    });
     return token;
   }
 
