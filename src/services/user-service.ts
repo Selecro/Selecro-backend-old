@@ -28,9 +28,7 @@ export class MyUserService implements UserService<User, Credentials> {
     });
     if (credentials.email.includes('@')) {
       if (!foundUser0) {
-        throw new HttpErrors.NotFound(
-          `user not found with this email: ${credentials.email}`,
-        );
+        throw new HttpErrors.NotFound(`user not found`);
       }
       const passwordMatched = await this.hasher.comparePassword(
         credentials.passwordHash,
@@ -42,9 +40,7 @@ export class MyUserService implements UserService<User, Credentials> {
       return foundUser0;
     } else {
       if (!foundUser1) {
-        throw new HttpErrors.NotFound(
-          `user not found with this username: ${credentials.email}`,
-        );
+        throw new HttpErrors.NotFound(`user not found`);
       }
       const passwordMatched = await this.hasher.comparePassword(
         credentials.passwordHash,
@@ -56,6 +52,7 @@ export class MyUserService implements UserService<User, Credentials> {
       return foundUser1;
     }
   }
+
   convertToUserProfile(user: User): UserProfile {
     let userName = '';
     if (user.name) {
