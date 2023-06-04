@@ -71,9 +71,6 @@ export class Credentials {
   passwordHash: string;
 }
 
-//interface Response<ResBody = any,Locals extends Record<string, any> = Record<string, any>> extends core.Response<ResBody, Locals> {}
-//Response<any, Record<string, any>>
-
 export class UserController {
   constructor(
     @inject('services.jwt.service')
@@ -180,7 +177,7 @@ export class UserController {
         await this.emailService.sendRegistrationEmail(savedUser);
         return true;
       } catch (_err) {
-        throw new HttpErrors.UnprocessableEntity('unexpected error');
+        throw new HttpErrors.UnprocessableEntity('error sending email');
       }
     } else if (existedemail) {
       throw new HttpErrors.UnprocessableEntity('email already exist');
@@ -210,7 +207,12 @@ export class UserController {
       },
     },
   })
-  async verifyEmail(@requestBody() request: {token: string}) {
+  async verifyEmail(
+    @requestBody()
+    request: {
+      token: string;
+    },
+  ): Promise<boolean> {
     interface DecodedToken {
       userId: number;
       iat: number;
@@ -229,40 +231,80 @@ export class UserController {
     const {userId} = decodedToken;
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new HttpErrors.UnprocessableEntity(
-        'Invalid or expired verification token',
-      );
+      throw new HttpErrors.UnprocessableEntity('User not found');
+    } else {
+      try {
+        await this.userRepository.updateById(user.id, {emailVerified: true});
+        return true;
+      } catch (_err) {
+        throw new HttpErrors.UnprocessableEntity(
+          'Failed to update user email verification status',
+        );
+      }
     }
-    try {
-      await this.userRepository.updateById(user.id, {emailVerified: true});
-    } catch (error) {
-      throw new HttpErrors.UnprocessableEntity(
-        'Failed to update user email verification status',
-      );
-    }
-    return {message: 'Email address verified successfully'};
   }
 
-  @post('/send-password-change')
-  async sendPasswordChange(@requestBody() request: {email: string}) {
+  @post('/send-password-change', {
+    responses: {
+      '200': {
+        description: 'Verify',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                send: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async sendPasswordChange(
+    @requestBody()
+    request: {
+      email: string;
+    },
+  ): Promise<boolean> {
     const user = await this.userRepository.findOne({
       where: {
         email: request.email,
       },
     });
     if (!user) {
-      throw new HttpErrors.UnprocessableEntity(
-        'email not recognized',
-      );
-    }
-    try {
-      await this.emailService.sendPasswordChange(user);
-    } catch (err) {
-      throw new HttpErrors.UnprocessableEntity('error in email send');
+      throw new HttpErrors.UnprocessableEntity('email not recognized');
+    } else {
+      try {
+        await this.emailService.sendPasswordChange(user);
+        return true;
+      } catch (_err) {
+        throw new HttpErrors.UnprocessableEntity('error in email send');
+      }
     }
   }
 
-  @post('/password-change')
+  @post('/password-change', {
+    responses: {
+      '200': {
+        description: 'Verify',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                change: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
   async changePassword(
     @requestBody()
     request: {
@@ -270,7 +312,7 @@ export class UserController {
       password0: string;
       password1: string;
     },
-  ) {
+  ): Promise<boolean> {
     interface DecodedToken {
       userId: number;
       iat: number;
@@ -281,7 +323,7 @@ export class UserController {
     let decodedToken: DecodedToken;
     try {
       decodedToken = jwt.verify(token, secret) as DecodedToken;
-    } catch (err) {
+    } catch (_err) {
       throw new HttpErrors.UnprocessableEntity(
         'Invalid or expired verification token',
       );
@@ -289,23 +331,23 @@ export class UserController {
     const {userId} = decodedToken;
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new HttpErrors.UnprocessableEntity(
-        'Invalid or expired verification token',
-      );
-    }
-    if (request.password0 === request.password1) {
-      try {
-        await this.emailService.sendSuccessfulyPasswordChange(user);
-        await this.userRepository.updateById(user.id, {
-          passwordHash: await this.hasher.hashPassword(request.password0),
-        });
-      } catch (error) {
-        throw new HttpErrors.UnprocessableEntity(
-          'Failed to update user password',
-        );
-      }
+      throw new HttpErrors.UnprocessableEntity('User not found');
     } else {
-      throw new HttpErrors.UnprocessableEntity('Password are not matching');
+      if (request.password0 === request.password1) {
+        try {
+          await this.emailService.sendSuccessfulyPasswordChange(user);
+          await this.userRepository.updateById(user.id, {
+            passwordHash: await this.hasher.hashPassword(request.password0),
+          });
+          return true;
+        } catch (_err) {
+          throw new HttpErrors.UnprocessableEntity(
+            'Failed to update user password',
+          );
+        }
+      } else {
+        throw new HttpErrors.UnprocessableEntity('Password are not matching');
+      }
     }
   }
 
@@ -330,7 +372,10 @@ export class UserController {
       },
     },
   })
-  async replaceById(@requestBody() user: User): Promise<void> {
+  async replaceById(
+    @requestBody()
+    user: User,
+  ): Promise<boolean> {
     const dbuser = await this.userRepository.findById(this.user.id);
     if (
       dbuser.date.toString() === new Date(user.date).toString() &&
@@ -340,12 +385,15 @@ export class UserController {
       dbuser.link === user.link
     ) {
       await this.userRepository.updateById(this.user.id, user);
+      return true;
     } else if (dbuser.email !== user.email) {
       if (!isEmail.validate(user.email)) {
         throw new HttpErrors.UnprocessableEntity('invalid Email');
+      } else {
+        await this.emailService.sendResetEmail(dbuser, user.email);
+        await this.userRepository.updateById(user.id, {emailVerified: false});
+        return true;
       }
-      await this.emailService.sendResetEmail(dbuser, user.email);
-      await this.userRepository.updateById(user.id, {emailVerified: false});
     } else if (dbuser.date.toString() !== new Date(user.date).toString()) {
       throw new HttpErrors.UnprocessableEntity('cant change creation date');
     } else if (dbuser.link !== user.link) {
@@ -369,8 +417,13 @@ export class UserController {
       },
     },
   })
-  async deleteById(): Promise<void> {
-    await this.userRepository.deleteById(this.user.id);
+  async deleteById(): Promise<boolean> {
+    try {
+      await this.userRepository.deleteById(this.user.id);
+      return true;
+    } catch (_err) {
+      throw new HttpErrors.UnprocessableEntity('error in delete');
+    }
   }
 
   @authenticate('jwt')
@@ -384,12 +437,12 @@ export class UserController {
   })
   async getUserProfilePicture(): Promise<Buffer> {
     const user = await this.userRepository.findById(this.user.id);
-    if (user.link != null) {
+    if (user.link) {
       const sftpResponse = await sftp
         .connect(config)
         .then(async () => {
-          const xd = await sftp.get('/users/' + user.link);
-          return xd;
+          const x = await sftp.get('/users/' + user.link);
+          return x;
         })
         .then((response: string) => {
           sftp.end();
@@ -398,7 +451,6 @@ export class UserController {
         .catch(() => {
           throw new HttpErrors.UnprocessableEntity('error in get picture');
         });
-
       return sftpResponse;
     } else {
       throw new HttpErrors.UnprocessableEntity(
@@ -440,7 +492,7 @@ export class UserController {
     })
     request: Request,
     @inject(RestBindings.Http.RESPONSE) response: Response,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const user = await this.userRepository.findById(this.user.id);
     const storage = multer.diskStorage({
       destination: function (_req, _file, cb) {
@@ -453,7 +505,7 @@ export class UserController {
     });
     const upload = multer({storage: storage});
     try {
-      upload.single('image')(request, response, function (err: string) { });
+      upload.single('image')(request, response, function (_err: string) { });
       try {
         await sftp.connect(config);
         await sftp.put(
@@ -464,12 +516,13 @@ export class UserController {
         await this.userRepository.updateById(user.id, {
           link: request.file?.filename,
         });
-      } catch (error) {
+        return true;
+      } catch (_err) {
         throw new HttpErrors.UnprocessableEntity(
           'Error in uploading file to SFTP',
         );
       }
-    } catch (error) {
+    } catch (_err) {
       throw new HttpErrors.UnprocessableEntity('Error in uploading file');
     }
   }
@@ -489,8 +542,8 @@ export class UserController {
         .connect(config)
         .then(async () => {
           await this.userRepository.updateById(user.id, {link: ''});
-          const xd = await sftp.del('/users/' + user.link);
-          return xd;
+          const x = await sftp.del('/users/' + user.link);
+          return x;
         })
         .then((response: string) => {
           sftp.end();
