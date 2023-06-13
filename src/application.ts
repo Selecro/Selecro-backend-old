@@ -14,6 +14,7 @@ import {
 import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import {SocketController} from './controllers';
 import {DbDataSource} from './datasources';
 import {
   GroupRepository,
@@ -28,6 +29,7 @@ import {EmailService} from './services/email';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
+import {SocketServer} from './socketio.server';
 dotenv.config();
 
 export {ApplicationConfig};
@@ -44,6 +46,13 @@ export class FirstappApplication extends BootMixin(
     this.sequence(MySequence);
 
     this.setupCors();
+
+    const socketIOServer = new SocketServer();
+    socketIOServer.start(); // Set the desired port number
+    //this.bind('socketio.server').to(socketIOServer.getServer());
+
+    // Register Socket.IO controller
+    this.controller(SocketController);
 
     // Set up default home page
     this.static('/', path.join(__dirname, '../public'));

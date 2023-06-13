@@ -37,6 +37,15 @@ if (require.main === module) {
       protocol: 'https',
       key: fs.readFileSync('localhost.decrypt.key'),
       cert: fs.readFileSync('localhost.crt'),
+      socketio: {
+        cors: {
+          origin: '*',
+          methods: ['GET', 'POST'],
+          credentials: true,
+        },
+        port: 4000,
+      },
+      websocket: {port: 4000},
     },
   };
   main(config).catch(err => {
