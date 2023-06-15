@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import {ApplicationConfig, FirstappApplication} from './application';
 
+import {BindingKey} from '@loopback/core';
 import * as dotenv from 'dotenv';
+import {SocketController} from './controllers';
 dotenv.config();
 
 export * from './application';
@@ -14,7 +16,9 @@ export async function main(options: ApplicationConfig = {}) {
   const url = app.restServer.url;
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
-
+  app.bind('controllers.YourController').toClass(SocketController);
+  const yourController = await app.get<SocketController>(BindingKey.create<SocketController>('controllers.YourController'));
+  yourController.start();
   return app;
 }
 
@@ -37,15 +41,6 @@ if (require.main === module) {
       protocol: 'https',
       key: fs.readFileSync('localhost.decrypt.key'),
       cert: fs.readFileSync('localhost.crt'),
-      socketio: {
-        cors: {
-          origin: '*',
-          methods: ['GET', 'POST'],
-          credentials: true,
-        },
-        port: 4000,
-      },
-      websocket: {port: 4000},
     },
   };
   main(config).catch(err => {

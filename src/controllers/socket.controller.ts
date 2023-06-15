@@ -1,34 +1,51 @@
 import {repository} from '@loopback/repository';
-import {Socket} from 'socket.io';
+import * as fs from 'fs';
+import * as https from 'https';
+import {Server as SocketIOServer} from 'socket.io';
 import {InstructionRepository} from '../repositories';
 
 export class SocketController {
+
+  private server: https.Server;
+  private io: SocketIOServer;
+
   constructor(
-    @repository(InstructionRepository) private productRepo: InstructionRepository,
-  ) { }
+    @repository(InstructionRepository) private instructionRepository: InstructionRepository,
+  ) {
+  }
 
-  // Real-time update example
-  async subscribeToProductUpdates(socket: Socket, id: number): Promise<void> {
-    const product = await this.productRepo.findById(id);
-    console.log('Joining room: ', id);
-
-    // Emit initial data
-    socket.emit('product-updates', {
-      productId: id,
-      data: product,
+  async start(): Promise<void> {
+    const options = {
+      key: fs.readFileSync('localhost.decrypt.key', 'utf8'),
+      cert: fs.readFileSync('localhost.crt', 'utf8'),
+    };
+    this.server = https.createServer(options);
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: [
+          'https://selecro.cz:443',
+          'https://develop.selecro.cz:443',
+          'http://localhost:4200',
+        ],
+        methods: ['GET', 'POST'],
+      },
     });
-
-    // Listen for changes in the subscribed product
-    // and emit updates to connected clients
-    const changeStream = this.productRepo.dataSource.connector!.collection('products').watch();
-    changeStream.on('change', async (change: {operationType: string; documentKey: {_id: number;};}) => {
-      if (change.operationType === 'update' && change.documentKey._id === id) {
-        const updatedProduct = await this.productRepo.findById(id);
-        socket.emit('product-updates', {
-          productId: id,
-          data: updatedProduct,
-        });
-      }
+    this.io.on('connection', async (socket) => {
+      console.log('A user connected.');
+      const data = await this.instructionRepository.find({
+        where: {
+          private: false,
+        }
+      })
+      console.log(data);
+      socket.emit('message', data);
+      socket.on('disconnect', () => {
+        console.log('A user disconnected.');
+      });
+    });
+    const port = 4000;
+    this.server.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
     });
   }
 }

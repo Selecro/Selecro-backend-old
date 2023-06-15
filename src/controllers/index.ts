@@ -1,3 +1,4 @@
-export * from './login.controller';
 export * from './ping.controller';
 export * from './socket.controller';
+export * from './user.controller';
+

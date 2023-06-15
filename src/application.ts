@@ -14,7 +14,8 @@ import {
 import {ServiceMixin} from '@loopback/service-proxy';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import {SocketController} from './controllers';
+import {PingController, SocketController} from './controllers';
+import {UserController} from './controllers/user.controller';
 import {DbDataSource} from './datasources';
 import {
   GroupRepository,
@@ -29,7 +30,6 @@ import {EmailService} from './services/email';
 import {BcryptHasher} from './services/hash.password';
 import {JWTService} from './services/jwt-service';
 import {MyUserService} from './services/user-service';
-import {SocketServer} from './socketio.server';
 dotenv.config();
 
 export {ApplicationConfig};
@@ -45,12 +45,6 @@ export class FirstappApplication extends BootMixin(
     // Set up the custom sequence
     this.sequence(MySequence);
 
-    this.setupCors();
-
-    const socketIOServer = new SocketServer();
-    socketIOServer.start(); // Set the desired port number
-    //this.bind('socketio.server').to(socketIOServer.getServer());
-
     // Register Socket.IO controller
     this.controller(SocketController);
 
@@ -64,6 +58,9 @@ export class FirstappApplication extends BootMixin(
     this.component(RestExplorerComponent);
     this.component(AuthenticationComponent);
     this.component(JWTAuthenticationComponent);
+    this.controller(PingController);
+    this.controller(UserController);
+    this.controller(SocketController);
     this.repository(UserRepository);
     this.repository(InstructionRepository);
     this.repository(StepRepository);
@@ -85,20 +82,6 @@ export class FirstappApplication extends BootMixin(
         nested: true,
       },
     };
-  }
-  setupCors() {
-    this.middleware((ctx, next) => {
-      ctx.response.header('Access-Control-Allow-Origin', '*');
-      ctx.response.header(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept',
-      );
-      ctx.response.header(
-        'Access-Control-Allow-Methods',
-        'GET, PUT, POST, DELETE, OPTIONS',
-      );
-      return next();
-    });
   }
   setupBinding(): void {
     this.bind('services.jwt.service').toClass(JWTService);
