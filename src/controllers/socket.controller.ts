@@ -2,17 +2,17 @@ import {repository} from '@loopback/repository';
 import * as fs from 'fs';
 import * as https from 'https';
 import {Server as SocketIOServer} from 'socket.io';
-import {InstructionRepository} from '../repositories';
+import {InstructionRepository, StepRepository} from '../repositories';
 
 export class SocketController {
-
   private server: https.Server;
   private io: SocketIOServer;
 
   constructor(
-    @repository(InstructionRepository) private instructionRepository: InstructionRepository,
-  ) {
-  }
+    @repository(InstructionRepository)
+    private instructionRepository: InstructionRepository,
+    @repository(StepRepository) private stepRepository: StepRepository,
+  ) { }
 
   async start(): Promise<void> {
     const options = {
@@ -30,18 +30,19 @@ export class SocketController {
         methods: ['GET', 'POST'],
       },
     });
-    this.io.on('connection', async (socket) => {
-      console.log('A user connected.');
+    this.io.on('connection', async socket => {
       const data = await this.instructionRepository.find({
         where: {
           private: false,
-        }
-      })
-      console.log(data);
-      socket.emit('message', data);
-      socket.on('disconnect', () => {
-        console.log('A user disconnected.');
+        },
+        /*include: [
+          {
+            relation: 'steps',
+          },
+        ],*/
       });
+      socket.emit('message', data);
+      socket.on('disconnect', () => { });
     });
     const port = 4000;
     this.server.listen(port, () => {

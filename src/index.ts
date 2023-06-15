@@ -17,8 +17,10 @@ export async function main(options: ApplicationConfig = {}) {
   console.log(`Server is running at ${url}`);
   console.log(`Try ${url}/ping`);
   app.bind('controllers.YourController').toClass(SocketController);
-  const yourController = await app.get<SocketController>(BindingKey.create<SocketController>('controllers.YourController'));
-  yourController.start();
+  const yourController = await app.get<SocketController>(
+    BindingKey.create<SocketController>('controllers.YourController'),
+  );
+  await yourController.start();
   return app;
 }
 

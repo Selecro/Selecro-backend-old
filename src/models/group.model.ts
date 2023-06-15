@@ -1,8 +1,8 @@
 import {Entity, model, property} from '@loopback/repository';
 
 enum Role {
-  admin = 'admin',
-  user = 'user',
+  ADMIN = 'admin',
+  USER = 'user',
 }
 
 @model({

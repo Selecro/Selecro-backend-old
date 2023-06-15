@@ -84,7 +84,7 @@ export class UserController {
     @inject('services.email')
     public emailService: EmailService,
     @repository(UserRepository) public userRepository: UserRepository,
-  ) { }
+  ) {}
 
   @post('/login', {
     responses: {
@@ -505,7 +505,7 @@ export class UserController {
     });
     const upload = multer({storage: storage});
     try {
-      upload.single('image')(request, response, function (_err: string) { });
+      upload.single('image')(request, response, function (_err: string) {});
       try {
         await sftp.connect(config);
         await sftp.put(

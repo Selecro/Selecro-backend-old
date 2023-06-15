@@ -71,6 +71,7 @@
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.1",
     "sharp": "^0.32.1",
+    "socket.io": "^4.6.2",
     "ssh2-sftp-client": "^9.0.4",
     "tslib": "^2.5.0",
     "uuid": "^8.3.2"

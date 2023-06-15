@@ -1,8 +1,4 @@
-import {Entity, hasMany, model, property} from '@loopback/repository';
-import {Group} from './group.model';
-import {Instruction} from './instruction.model';
-import {UserGroup} from './user-group.model';
-import {UserLink} from './user-link.model';
+import {Entity, model, property} from '@loopback/repository';
 
 export enum Language {
   CZ = 'CZ',
@@ -196,27 +192,6 @@ export class User extends Entity {
     },
   })
   link?: string | null;
-
-  @hasMany(() => Group, {
-    through: {
-      model: () => UserGroup,
-      keyTo: 'groupId',
-      keyFrom: 'userId',
-    },
-  })
-  groups: Group[];
-
-  @hasMany(() => User, {
-    through: {
-      model: () => UserLink,
-      keyFrom: 'followerId',
-      keyTo: 'followeeId',
-    },
-  })
-  users: User[];
-
-  @hasMany(() => Instruction)
-  instruction?: Instruction[];
 
   constructor(data?: Partial<User>) {
     super(data);

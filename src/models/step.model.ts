@@ -1,5 +1,4 @@
-import {Entity, belongsTo, model, property} from '@loopback/repository';
-import {Instruction} from './instruction.model';
+import {Entity, model, property} from '@loopback/repository';
 
 @model({
   name: 'steps',
@@ -24,20 +23,6 @@ export class Step extends Entity {
     type: 'string',
     required: true,
     postgresql: {
-      columnName: 'style',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'NO',
-    },
-  })
-  style: string;
-
-  @property({
-    type: 'string',
-    required: true,
-    postgresql: {
       columnName: 'title',
       dataType: 'text',
       dataLength: null,
@@ -48,33 +33,20 @@ export class Step extends Entity {
   })
   title: string;
 
-  @property({
-    type: 'string',
+  @property.array({
+    type: 'array',
+    itemType: 'string',
     required: true,
     postgresql: {
-      columnName: 'pomucky',
-      dataType: 'text',
+      columnName: 'description',
+      dataType: 'text[]',
       dataLength: null,
       dataPrecision: null,
       dataScale: null,
       nullable: 'NO',
     },
   })
-  pomucky: string;
-
-  @property({
-    type: 'string',
-    required: true,
-    postgresql: {
-      columnName: 'popis',
-      dataType: 'text',
-      dataLength: null,
-      dataPrecision: null,
-      dataScale: null,
-      nullable: 'NO',
-    },
-  })
-  popis: string;
+  description: string[];
 
   @property({
     type: 'string',
@@ -89,9 +61,6 @@ export class Step extends Entity {
     },
   })
   link?: string | null;
-
-  @belongsTo(() => Instruction, {name: 'id'})
-  instructionId: number;
 
   constructor(data?: Partial<Step>) {
     super(data);
